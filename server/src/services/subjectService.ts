@@ -1,5 +1,4 @@
-import { Subject } from '../../database/schema';
-
+import { Subject } from '../models/schema';
 
 export interface ISubject {
 	name: string;
@@ -7,13 +6,11 @@ export interface ISubject {
 	status?: 'Live' | 'Archive';
 }
 
-
 const createSubject = async (subjectData: ISubject): Promise<any> => {
 	const subject = new Subject(subjectData);
 	await subject.save();
 	return subject;
 };
-
 
 const updateSubject = async (
 	subjectId: string,

@@ -1,4 +1,4 @@
-import { Parent } from '../../database/schema';
+import { Parent } from '../models/schema';
 
 class ParentService {
 	static async createParent(data: {

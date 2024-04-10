@@ -1,4 +1,4 @@
-const Quiz = require('../../database/schema').Quiz;
+const Quiz = require('../models/schema').Quiz;
 
 class QuizService {
 	static async createQuiz(data: {

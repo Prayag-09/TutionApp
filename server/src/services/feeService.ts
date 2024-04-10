@@ -1,4 +1,4 @@
-import { Fee } from '../../database/schema';
+import { Fee } from '../models/schema';
 
 class FeeService {
 	static async createFee(data: {

@@ -1,4 +1,4 @@
-import { Student } from '../../database/schema';
+import { Student } from '../models/schema';
 
 class StudentService {
 	static async createStudent(data: {

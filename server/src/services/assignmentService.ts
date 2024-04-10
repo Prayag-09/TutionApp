@@ -1,4 +1,4 @@
-import { Assignment } from '../../database/schema';
+import { Assignment } from '../models/schema';
 
 class AssignmentService {
 	static async createAssignment(data: {

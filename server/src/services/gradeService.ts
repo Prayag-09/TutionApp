@@ -1,4 +1,4 @@
-import { Grade } from '../../database/schema';
+import { Grade } from '../models/schema';
 
 class GradeService {
 	static async createGrade(data: {

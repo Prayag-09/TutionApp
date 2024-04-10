@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import { User } from '../../database/schema';
+import { User } from '../models/schema';
 
 const login = async (
 	req: Request,
@@ -25,13 +25,13 @@ const login = async (
 				.json({ message: 'Invalid credentials' });
 		}
 		const token = jwt.sign(
-			{ _id: user._id, username: user.username, role: user.userType },
+			{ _id: user._id, username: user.username, role: user.role },
 			process.env.JWT_SECRET as string,
 			{ expiresIn: '1h' }
 		);
 		res
 			.status(StatusCodes.OK)
-			.json({ token, user: { username: user.username, role: user.userType } });
+			.json({ token, user: { username: user.username, role: user.role } });
 	} catch (error) {
 		next(error);
 	}
