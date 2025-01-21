@@ -18,7 +18,7 @@ app.use(express.json());
 const port = 3000;
 
 mongoose
-	.connect('mongodb+srv://zerone:zerone@tuitionapp.xdnke.mongodb.net/')
+	.connect('')
 	.then(() => console.log('Successfully connected to DB'))
 	.catch((err) => console.error('Error connecting to the database:', err));
 
