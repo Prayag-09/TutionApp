@@ -310,3 +310,14 @@ export const Student = mongoose.model('Student', studentSchema);
 export const Attendance = mongoose.model('Attendance', attendanceSchema);
 export const User = mongoose.model('User', userSchema);
 export const Quiz = mongoose.model('Quiz', quizSchema);
+
+// const {
+// 	Subject,
+// 	Grade,
+// 	Teacher,
+// 	Parent,
+// 	Student,
+// 	Attendance,
+// 	User,
+// 	Quiz,
+// } = require('../database/schema.js');
