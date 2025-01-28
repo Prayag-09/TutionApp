@@ -1,20 +1,29 @@
-const mongoose = require('mongoose');
+const connectDB = require('../database/connection');
 const express = require('express');
-
 const app = express();
-app.use(express.json());
-
 const dotenv = require('dotenv');
-dotenv.config();
+const subjectRoutes = require('./routes/subjectRoutes');
+const gradeRoutes = require('./routes/gradeRoutes');
+const teacherRoutes = require('./routes/teacherRoutes');
+const parentRoutes = require('./routes/parentRoutes');
+const studentRoutes = require('./routes/studentRoutes');
+const feeRoutes = require('./routes/feeRoutes');
+const assignmentRoutes = require('./routes/assignmentRoutes');
+const quizRoutes = require('./routes/quizRoutes');
 
+app.use(express.json());
+dotenv.config();
 const port = process.env.PORT || 3000;
 
-mongoose
-	.connect(process.env.URL)
-	.then(() => console.log('Successfully connected to DB'))
-	.catch((err) => console.error('Error connecting to the database:', err));
+connectDB();
 
-
-	
+app.use('/api/subjects', subjectRoutes);
+app.use('/api/grades', gradeRoutes);
+app.use('/api/teachers', teacherRoutes);
+app.use('/api/parents', parentRoutes);
+app.use('/api/students', studentRoutes);
+app.use('/api/fees', feeRoutes);
+app.use('/api/assignments', assignmentRoutes);
+app.use('/api/quizzes', quizRoutes);
 
 app.listen(port, () => console.log(`Server connected to port ${port}`));
