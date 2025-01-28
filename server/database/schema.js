@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 
+// Subject Schema
 const subjectSchema = new mongoose.Schema(
 	{
 		name: {
@@ -22,6 +23,7 @@ const subjectSchema = new mongoose.Schema(
 	}
 );
 
+// Grade Schema
 const gradeSchema = new mongoose.Schema(
 	{
 		name: {
@@ -57,6 +59,29 @@ const gradeSchema = new mongoose.Schema(
 	}
 );
 
+const gradeSubjectSchema = new mongoose.Schema(
+	{
+		gradeId: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'Grade',
+			required: true,
+		},
+		subjectId: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'Subject',
+			required: true,
+		},
+		status: {
+			type: String,
+			enum: ['Live', 'Archive'],
+			default: 'Live',
+		},
+	},
+	{
+		timestamps: true,
+	}
+);
+
 const teacherSchema = new mongoose.Schema(
 	{
 		name: {
@@ -84,6 +109,9 @@ const teacherSchema = new mongoose.Schema(
 			country: {
 				type: String,
 			},
+			zipCode: {
+				type: String,
+			},
 		},
 		qualification: {
 			type: String,
@@ -95,13 +123,9 @@ const teacherSchema = new mongoose.Schema(
 		},
 		gradeSubjects: [
 			{
-				gradeId: {
+				gradeSubjectId: {
 					type: mongoose.Schema.Types.ObjectId,
-					ref: 'Grade',
-				},
-				subjectId: {
-					type: mongoose.Schema.Types.ObjectId,
-					ref: 'Subject',
+					ref: 'GradeSubject',
 				},
 			},
 		],
@@ -211,21 +235,124 @@ const studentSchema = new mongoose.Schema(
 	}
 );
 
-const attendanceSchema = new mongoose.Schema(
+const studentSubjectSchema = new mongoose.Schema(
 	{
 		studentId: {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: 'Student',
 			required: true,
 		},
-		date: {
-			type: Date,
+		subjectId: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'Subject',
+			required: true,
+		},
+		teacherId: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'Teacher',
 			required: true,
 		},
 		status: {
 			type: String,
-			enum: ['Present', 'Absent'],
+			enum: ['Live', 'Archive'],
+			default: 'Live',
+		},
+	},
+	{
+		timestamps: true,
+	}
+);
+
+const feeSchema = new mongoose.Schema(
+	{
+		gradeId: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'Grade',
 			required: true,
+		},
+		subjectId: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'Subject',
+			required: true,
+		},
+		teacherId: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'Teacher',
+			required: true,
+		},
+		amount: {
+			type: Number,
+			required: true,
+		},
+		validFrom: {
+			type: Date,
+			required: true,
+		},
+	},
+	{
+		timestamps: true,
+	}
+);
+
+const feeRemittanceSchema = new mongoose.Schema(
+	{
+		studentSubjectId: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'StudentSubject',
+			required: true,
+		},
+		month: {
+			type: Number,
+			required: true,
+		},
+		year: {
+			type: Number,
+			required: true,
+		},
+		amount: {
+			type: Number,
+			required: true,
+		},
+	},
+	{
+		timestamps: true,
+	}
+);
+
+const assignmentSchema = new mongoose.Schema(
+	{
+		name: {
+			type: String,
+			required: true,
+			trim: true,
+		},
+		gradeSubjectId: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'GradeSubject',
+			required: true,
+		},
+		teacherId: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'Teacher',
+			required: true,
+		},
+		details: {
+			type: String,
+			required: true,
+			trim: true,
+		},
+		file: {
+			type: String,
+			trim: true,
+		},
+		maximumMark: {
+			type: Number,
+			required: true,
+		},
+		status: {
+			type: String,
+			enum: ['Live', 'Archive'],
+			default: 'Live',
 		},
 	},
 	{
@@ -248,11 +375,6 @@ const userSchema = new mongoose.Schema(
 			type: String,
 			required: true,
 		},
-		permissions: [
-			{
-				type: String,
-			},
-		],
 	},
 	{
 		timestamps: true,
@@ -268,10 +390,12 @@ const quizSchema = new mongoose.Schema(
 		gradeSubjectId: {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: 'GradeSubject',
+			required: true,
 		},
 		teacherId: {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: 'Teacher',
+			required: true,
 		},
 		timeLimit: {
 			type: Number,
@@ -296,28 +420,109 @@ const quizSchema = new mongoose.Schema(
 				},
 			},
 		],
+		status: {
+			type: String,
+			enum: ['Live', 'Archive'],
+			default: 'Live',
+		},
 	},
 	{
 		timestamps: true,
 	}
 );
 
+const quizStudentSchema = new mongoose.Schema(
+	{
+		quizId: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'Quiz',
+			required: true,
+		},
+		studentId: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'Student',
+			required: true,
+		},
+		mark: {
+			type: Number,
+		},
+		status: {
+			type: String,
+			enum: ['Attempted', 'Not Attempted'],
+			default: 'Not Attempted',
+		},
+	},
+	{
+		timestamps: true,
+	}
+);
+
+const examSchema = new mongoose.Schema(
+	{
+		name: {
+			type: String,
+			required: true,
+		},
+		gradeSubjectId: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'GradeSubject',
+			required: true,
+		},
+		teacherId: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'Teacher',
+			required: true,
+		},
+		maxMark: {
+			type: Number,
+			required: true,
+		},
+	},
+	{
+		timestamps: true,
+	}
+);
+
+const marksSchema = new mongoose.Schema(
+	{
+		examId: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'Exam',
+			required: true,
+		},
+		studentId: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'Student',
+			required: true,
+		},
+		mark: {
+			type: Number,
+			required: true,
+		},
+	},
+	{
+		timestamps: true,
+	}
+);
+
+export const Marks = mongoose.model('Marks', marksSchema);
+export const Exam = mongoose.model('Exam', examSchema);
+export const QuizStudent = mongoose.model('QuizStudent', quizStudentSchema);
 export const Subject = mongoose.model('Subject', subjectSchema);
 export const Grade = mongoose.model('Grade', gradeSchema);
+export const GradeSubject = mongoose.model('GradeSubject', gradeSubjectSchema);
 export const Teacher = mongoose.model('Teacher', teacherSchema);
 export const Parent = mongoose.model('Parent', parentSchema);
 export const Student = mongoose.model('Student', studentSchema);
-export const Attendance = mongoose.model('Attendance', attendanceSchema);
+export const StudentSubject = mongoose.model(
+	'StudentSubject',
+	studentSubjectSchema
+);
+export const Fee = mongoose.model('Fee', feeSchema);
+export const FeeRemittance = mongoose.model(
+	'FeeRemittance',
+	feeRemittanceSchema
+);
+export const Assignment = mongoose.model('Assignment', assignmentSchema);
 export const User = mongoose.model('User', userSchema);
 export const Quiz = mongoose.model('Quiz', quizSchema);
-
-// const {
-// 	Subject,
-// 	Grade,
-// 	Teacher,
-// 	Parent,
-// 	Student,
-// 	Attendance,
-// 	User,
-// 	Quiz,
-// } = require('../database/schema.js');
