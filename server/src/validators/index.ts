@@ -1,14 +1,14 @@
-const z = require('zod');
+import z from 'zod';
 
 export const subjectValidator = z.object({
 	name: z.string().min(1, 'Name is required').trim(),
-	description: z.string().optional().trim(),
+	description: z.string().trim().optional(),
 	status: z.enum(['Live', 'Archive']).default('Live'),
 });
 
 export const gradeValidator = z.object({
 	name: z.string().min(1, 'Name is required').trim(),
-	description: z.string().optional().trim(),
+	description: z.string().trim().optional(),
 	status: z.enum(['Live', 'Archive']).default('Live'),
 	subjects: z.array(
 		z.object({

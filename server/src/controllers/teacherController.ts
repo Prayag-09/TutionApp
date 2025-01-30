@@ -1,7 +1,8 @@
 const Teacher = require('../database/schema').Teacher;
+import { Request, Response } from 'express';
 
 const TeacherController = {
-	async addTeacher(req, res) {
+	async addTeacher(req: Request, res: Response) {
 		try {
 			const {
 				name,
@@ -36,7 +37,7 @@ const TeacherController = {
 		}
 	},
 
-	async editTeacher(req, res) {
+	async editTeacher(req: Request, res: Response) {
 		try {
 			const { teacherId, name, mobileNumber, email, status } = req.body;
 			const teacher = await Teacher.findByIdAndUpdate(
@@ -54,7 +55,7 @@ const TeacherController = {
 		}
 	},
 
-	async archiveTeacher(req, res) {
+	async archiveTeacher(req: Request, res: Response) {
 		try {
 			const { teacherId } = req.body;
 			const teacher = await Teacher.findByIdAndUpdate(
@@ -72,7 +73,7 @@ const TeacherController = {
 		}
 	},
 
-	async restoreTeacher(req, res) {
+	async restoreTeacher(req: Request, res: Response) {
 		try {
 			const { teacherId } = req.body;
 			const teacher = await Teacher.findByIdAndUpdate(

@@ -1,7 +1,8 @@
 const Grade = require('../database/schema').Grade;
+import { Request, Response } from 'express';
 
 const GradeController = {
-	async addGrade(req, res) {
+	async addGrade(req: Request, res: Response) {
 		try {
 			const { name, description, subjects, status } = req.body;
 			const grade = new Grade({ name, description, subjects, status });
@@ -12,7 +13,7 @@ const GradeController = {
 		}
 	},
 
-	async editGrade(req, res) {
+	async editGrade(req: Request, res: Response) {
 		try {
 			const { gradeId, name, description, subjects, status } = req.body;
 			const grade = await Grade.findByIdAndUpdate(
@@ -27,7 +28,7 @@ const GradeController = {
 		}
 	},
 
-	async archiveGrade(req, res) {
+	async archiveGrade(req: Request, res: Response) {
 		try {
 			const { gradeId } = req.body;
 			const grade = await Grade.findByIdAndUpdate(
@@ -42,7 +43,7 @@ const GradeController = {
 		}
 	},
 
-	async restoreGrade(req, res) {
+	async restoreGrade(req: Request, res: Response) {
 		try {
 			const { gradeId } = req.body;
 			const grade = await Grade.findByIdAndUpdate(

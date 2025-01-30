@@ -1,7 +1,8 @@
 const Quiz = require('../database/schema').Quiz;
+import { Request, Response } from 'express';
 
 const QuizController = {
-	async addQuiz(req, res) {
+	async addQuiz(req: Request, res: Response) {
 		try {
 			const { name, gradeSubjectId, teacherId, timeLimit, maxMark, questions } =
 				req.body;
@@ -20,7 +21,7 @@ const QuizController = {
 		}
 	},
 
-	async editQuiz(req, res) {
+	async editQuiz(req: Request, res: Response) {
 		try {
 			const {
 				quizId,
@@ -43,7 +44,7 @@ const QuizController = {
 		}
 	},
 
-	async archiveQuiz(req, res) {
+	async archiveQuiz(req: Request, res: Response) {
 		try {
 			const { quizId } = req.body;
 			const quiz = await Quiz.findByIdAndUpdate(
@@ -58,7 +59,7 @@ const QuizController = {
 		}
 	},
 
-	async restoreQuiz(req, res) {
+	async restoreQuiz(req: Request, res: Response) {
 		try {
 			const { quizId } = req.body;
 			const quiz = await Quiz.findByIdAndUpdate(

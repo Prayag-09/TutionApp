@@ -1,7 +1,8 @@
 const Subject = require('../database/schema').Subject;
+import { Request, Response } from 'express';
 
 const SubjectController = {
-	async addSubject(req, res) {
+	async addSubject(req: Request, res: Response) {
 		try {
 			const { name, description, status } = req.body;
 			const subject = new Subject({ name, description, status });
@@ -12,7 +13,7 @@ const SubjectController = {
 		}
 	},
 
-	async editSubject(req, res) {
+	async editSubject(req: Request, res: Response) {
 		try {
 			const { subjectId, name, description, status } = req.body;
 			const subject = await Subject.findByIdAndUpdate(
@@ -30,7 +31,7 @@ const SubjectController = {
 		}
 	},
 
-	async archiveSubject(req, res) {
+	async archiveSubject(req: Request, res: Response) {
 		try {
 			const { subjectId } = req.body;
 			const subject = await Subject.findByIdAndUpdate(
@@ -48,7 +49,7 @@ const SubjectController = {
 		}
 	},
 
-	async restoreSubject(req, res) {
+	async restoreSubject(req: Request, res: Response) {
 		try {
 			const { subjectId } = req.body;
 			const subject = await Subject.findByIdAndUpdate(

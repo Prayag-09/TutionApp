@@ -1,7 +1,8 @@
-const Assignment = require('../database/schema').Assignment;
+import { Request, Response } from 'express';
+import { Assignment } from '../../database/schema';
 
 const AssignmentController = {
-	async addAssignment(req, res) {
+	async addAssignment(req: Request, res: Response): Promise<Response | void> {
 		try {
 			const { title, description, dueDate, gradeId } = req.body;
 			const assignment = new Assignment({
@@ -12,15 +13,17 @@ const AssignmentController = {
 				status: 'Live',
 			});
 			await assignment.save();
-			res
+			return res
 				.status(201)
 				.json({ message: 'Assignment added successfully', assignment });
 		} catch (error) {
-			res.status(500).json({ message: 'Failed to add assignment', error });
+			return res
+				.status(500)
+				.json({ message: 'Failed to add assignment', error });
 		}
 	},
 
-	async editAssignment(req, res) {
+	async editAssignment(req: Request, res: Response): Promise<Response | void> {
 		try {
 			const { assignmentId, title, description, dueDate, gradeId } = req.body;
 			const assignment = await Assignment.findByIdAndUpdate(
@@ -28,17 +31,23 @@ const AssignmentController = {
 				{ title, description, dueDate, gradeId },
 				{ new: true }
 			);
-			if (!assignment)
+			if (!assignment) {
 				return res.status(404).json({ message: 'Assignment not found' });
-			res
+			}
+			return res
 				.status(200)
 				.json({ message: 'Assignment updated successfully', assignment });
 		} catch (error) {
-			res.status(500).json({ message: 'Failed to update assignment', error });
+			return res
+				.status(500)
+				.json({ message: 'Failed to update assignment', error });
 		}
 	},
 
-	async archiveAssignment(req, res) {
+	async archiveAssignment(
+		req: Request,
+		res: Response
+	): Promise<Response | void> {
 		try {
 			const { assignmentId } = req.body;
 			const assignment = await Assignment.findByIdAndUpdate(
@@ -46,17 +55,23 @@ const AssignmentController = {
 				{ status: 'Archived' },
 				{ new: true }
 			);
-			if (!assignment)
+			if (!assignment) {
 				return res.status(404).json({ message: 'Assignment not found' });
-			res
+			}
+			return res
 				.status(200)
 				.json({ message: 'Assignment archived successfully', assignment });
 		} catch (error) {
-			res.status(500).json({ message: 'Failed to archive assignment', error });
+			return res
+				.status(500)
+				.json({ message: 'Failed to archive assignment', error });
 		}
 	},
 
-	async restoreAssignment(req, res) {
+	async restoreAssignment(
+		req: Request,
+		res: Response
+	): Promise<Response | void> {
 		try {
 			const { assignmentId } = req.body;
 			const assignment = await Assignment.findByIdAndUpdate(
@@ -64,15 +79,18 @@ const AssignmentController = {
 				{ status: 'Live' },
 				{ new: true }
 			);
-			if (!assignment)
+			if (!assignment) {
 				return res.status(404).json({ message: 'Assignment not found' });
-			res
+			}
+			return res
 				.status(200)
 				.json({ message: 'Assignment restored successfully', assignment });
 		} catch (error) {
-			res.status(500).json({ message: 'Failed to restore assignment', error });
+			return res
+				.status(500)
+				.json({ message: 'Failed to restore assignment', error });
 		}
 	},
 };
 
-module.exports = AssignmentController;
+export default AssignmentController;

@@ -1,7 +1,8 @@
 const Parent = require('../database/schema').Parent;
+import { Request, Response } from 'express';
 
 const ParentController = {
-	async addParent(req, res) {
+	async addParent(req: Request, res: Response) {
 		try {
 			const {
 				name,
@@ -30,7 +31,7 @@ const ParentController = {
 		}
 	},
 
-	async editParent(req, res) {
+	async editParent(req: Request, res: Response) {
 		try {
 			const {
 				parentId,
@@ -64,7 +65,7 @@ const ParentController = {
 		}
 	},
 
-	async archiveParent(req, res) {
+	async archiveParent(req: Request, res: Response) {
 		try {
 			const { parentId } = req.body;
 			const parent = await Parent.findByIdAndUpdate(
@@ -79,7 +80,7 @@ const ParentController = {
 		}
 	},
 
-	async restoreParent(req, res) {
+	async restoreParent(req: Request, res: Response) {
 		try {
 			const { parentId } = req.body;
 			const parent = await Parent.findByIdAndUpdate(
