@@ -1,95 +1,75 @@
-const Teacher = require('../database/schema').Teacher;
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
+import { StatusCodes } from 'http-status-codes';
+import TeacherService from '../services/teacherService';
 
 const TeacherController = {
-	async addTeacher(req: Request, res: Response) {
+	addTeacher: async (req: Request, res: Response, next: NextFunction) : Promise<any> => {
 		try {
-			const {
-				name,
-				mobileNumber,
-				email,
-				residentialAddress,
-				city,
-				state,
-				country,
-				qualification,
-				status,
-				gradeSubjects,
-			} = req.body;
-
-			const teacher = new Teacher({
-				name,
-				mobileNumber,
-				email,
-				residentialAddress,
-				city,
-				state,
-				country,
-				qualification,
-				status,
-				gradeSubjects,
-			});
-
-			await teacher.save();
-			res.status(201).json({ message: 'Teacher added successfully', teacher });
+			const teacher = await TeacherService.createTeacher(req.body);
+			res
+				.status(StatusCodes.CREATED)
+				.json({ message: 'Teacher added successfully', teacher });
 		} catch (error) {
-			res.status(500).json({ message: 'Failed to add teacher', error });
+			next(error);
 		}
 	},
 
-	async editTeacher(req: Request, res: Response) {
+	editTeacher: async (req: Request, res: Response, next: NextFunction) : Promise<any> => {
 		try {
-			const { teacherId, name, mobileNumber, email, status } = req.body;
-			const teacher = await Teacher.findByIdAndUpdate(
-				teacherId,
-				{ name, mobileNumber, email, status },
-				{ new: true }
+			const teacher = await TeacherService.updateTeacher(
+				req.body.teacherId,
+				req.body
 			);
-			if (!teacher)
-				return res.status(404).json({ message: 'Teacher not found' });
+			if (!teacher) {
+				return res
+					.status(StatusCodes.NOT_FOUND)
+					.json({ message: 'Teacher not found' });
+			}
 			res
-				.status(200)
+				.status(StatusCodes.OK)
 				.json({ message: 'Teacher updated successfully', teacher });
 		} catch (error) {
-			res.status(500).json({ message: 'Failed to update teacher', error });
+			next(error);
 		}
 	},
 
-	async archiveTeacher(req: Request, res: Response) {
+	archiveTeacher: async (req: Request, res: Response, next: NextFunction) : Promise<any> => {
 		try {
-			const { teacherId } = req.body;
-			const teacher = await Teacher.findByIdAndUpdate(
-				teacherId,
-				{ status: 'Archived' },
-				{ new: true }
+			const teacher = await TeacherService.changeTeacherStatus(
+				req.body.teacherId,
+				'Archived'
 			);
-			if (!teacher)
-				return res.status(404).json({ message: 'Teacher not found' });
+			if (!teacher) {
+				return res
+					.status(StatusCodes.NOT_FOUND)
+					.json({ message: 'Teacher not found' });
+			}
 			res
-				.status(200)
+				.status(StatusCodes.OK)
 				.json({ message: 'Teacher archived successfully', teacher });
 		} catch (error) {
-			res.status(500).json({ message: 'Failed to archive teacher', error });
+			next(error);
 		}
 	},
 
-	async restoreTeacher(req: Request, res: Response) {
+	restoreTeacher: async (req: Request, res: Response, next: NextFunction) : Promise<any> 	=> {
 		try {
-			const { teacherId } = req.body;
-			const teacher = await Teacher.findByIdAndUpdate(
-				teacherId,
-				{ status: 'Active' },
-				{ new: true }
+			const teacher = await TeacherService.changeTeacherStatus(
+				req.body.teacherId,
+				'Active'
 			);
-			if (!teacher)
-				return res.status(404).json({ message: 'Teacher not found' });
+			if (!teacher) {
+				return res
+					.status(StatusCodes.NOT_FOUND)
+					.json({ message: 'Teacher not found' });
+			}
 			res
-				.status(200)
+				.status(StatusCodes.OK)
 				.json({ message: 'Teacher restored successfully', teacher });
 		} catch (error) {
-			res.status(500).json({ message: 'Failed to restore teacher', error });
+			next(error);
 		}
 	},
 };
 
-module.exports = TeacherController;
+export default TeacherController;

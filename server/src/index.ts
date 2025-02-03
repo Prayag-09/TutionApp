@@ -1,4 +1,4 @@
-import connectDB from '../database/connectio';
+import connectDB from '../database/connection';
 import express from 'express';
 
 const app = express();

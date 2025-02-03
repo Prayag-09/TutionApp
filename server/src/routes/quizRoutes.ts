@@ -1,10 +1,13 @@
-const express = require('express');
-const router = express.Router();
-const QuizController = require('../controllers/quizController');
+import express from 'express';
+import QuizController from '../controllers/quizController';
+import { quizSchema } from '../validators';
+import { validateRequest } from '../middleware/validation';
 
-router.post('/add', QuizController.addQuiz);
-router.put('/edit', QuizController.editQuiz);
+const router = express.Router();
+
+router.post('/add', validateRequest(quizSchema), QuizController.addQuiz);
+router.put('/edit', validateRequest(quizSchema), QuizController.editQuiz);
 router.put('/archive', QuizController.archiveQuiz);
 router.put('/restore', QuizController.restoreQuiz);
 
-module.exports = router;
+export default router;

@@ -1,96 +1,94 @@
-import { Request, Response } from 'express';
-import { Assignment } from '../../database/schema';
+import { Request, Response, NextFunction } from 'express';
+import { StatusCodes } from 'http-status-codes';
+import AssignmentService from '../services/assignmentService';
 
-const AssignmentController = {
-	async addAssignment(req: Request, res: Response): Promise<Response | void> {
+class AssignmentController {
+	static addAssignment = async (
+		req: Request,
+		res: Response,
+		next: NextFunction
+	) => {
 		try {
-			const { title, description, dueDate, gradeId } = req.body;
-			const assignment = new Assignment({
-				title,
-				description,
-				dueDate,
-				gradeId,
-				status: 'Live',
-			});
-			await assignment.save();
-			return res
-				.status(201)
+			const assignment = await AssignmentService.createAssignment(req.body);
+			res
+				.status(StatusCodes.CREATED)
 				.json({ message: 'Assignment added successfully', assignment });
 		} catch (error) {
-			return res
-				.status(500)
-				.json({ message: 'Failed to add assignment', error });
+			next(error);
 		}
-	},
+	};
 
-	async editAssignment(req: Request, res: Response): Promise<Response | void> {
+	static editAssignment = async (
+		req: Request,
+		res: Response,
+		next: NextFunction
+	) : Promise<any> => {
 		try {
-			const { assignmentId, title, description, dueDate, gradeId } = req.body;
-			const assignment = await Assignment.findByIdAndUpdate(
+			const { assignmentId, ...updateData } = req.body;
+			const assignment = await AssignmentService.updateAssignment(
 				assignmentId,
-				{ title, description, dueDate, gradeId },
-				{ new: true }
+				updateData
 			);
 			if (!assignment) {
-				return res.status(404).json({ message: 'Assignment not found' });
+				return res
+					.status(StatusCodes.NOT_FOUND)
+					.json({ message: 'Assignment not found' });
 			}
-			return res
-				.status(200)
+			res
+				.status(StatusCodes.OK)
 				.json({ message: 'Assignment updated successfully', assignment });
 		} catch (error) {
-			return res
-				.status(500)
-				.json({ message: 'Failed to update assignment', error });
+			next(error);
 		}
-	},
+	};
 
-	async archiveAssignment(
+	static archiveAssignment = async (
 		req: Request,
-		res: Response
-	): Promise<Response | void> {
+		res: Response,
+		next: NextFunction
+	) : Promise<any> => {
 		try {
 			const { assignmentId } = req.body;
-			const assignment = await Assignment.findByIdAndUpdate(
+			const assignment = await AssignmentService.changeAssignmentStatus(
 				assignmentId,
-				{ status: 'Archived' },
-				{ new: true }
+				'Archived'
 			);
 			if (!assignment) {
-				return res.status(404).json({ message: 'Assignment not found' });
+				return res
+					.status(StatusCodes.NOT_FOUND)
+					.json({ message: 'Assignment not found' });
 			}
-			return res
-				.status(200)
+			res
+				.status(StatusCodes.OK)
 				.json({ message: 'Assignment archived successfully', assignment });
 		} catch (error) {
-			return res
-				.status(500)
-				.json({ message: 'Failed to archive assignment', error });
+			next(error);
 		}
-	},
+	};
 
-	async restoreAssignment(
+	static restoreAssignment = async (
 		req: Request,
-		res: Response
-	): Promise<Response | void> {
+		res: Response,
+		next: NextFunction
+	) : Promise<any> => {
 		try {
 			const { assignmentId } = req.body;
-			const assignment = await Assignment.findByIdAndUpdate(
+			const assignment = await AssignmentService.changeAssignmentStatus(
 				assignmentId,
-				{ status: 'Live' },
-				{ new: true }
+				'Live'
 			);
 			if (!assignment) {
-				return res.status(404).json({ message: 'Assignment not found' });
+				return res
+					.status(StatusCodes.NOT_FOUND)
+					.json({ message: 'Assignment not found' });
 			}
-			return res
-				.status(200)
+			res
+				.status(StatusCodes.OK)
 				.json({ message: 'Assignment restored successfully', assignment });
 		} catch (error) {
-			return res
-				.status(500)
-				.json({ message: 'Failed to restore assignment', error });
+			next(error);
 		}
-	},
-};
+	};
+}
 
 export default AssignmentController;

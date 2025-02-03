@@ -1,11 +1,13 @@
-const express = require('express');
+import express from 'express';
+import GradeController from '../controllers/gradeController';
+import { gradeValidator } from '../validators';
+import { validateRequest } from '../middleware/validation';
+
 const router = express.Router();
 
-const GradeController = require('../controllers/gradeController');
-
-router.post('/add', GradeController.addGrade);
-router.put('/edit', GradeController.editGrade);
+router.post('/add', validateRequest(gradeValidator), GradeController.addGrade);
+router.put('/edit', validateRequest(gradeValidator), GradeController.editGrade);
 router.put('/archive', GradeController.archiveGrade);
 router.put('/restore', GradeController.restoreGrade);
 
-module.exports = router;
+export default router;

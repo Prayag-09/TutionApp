@@ -1,10 +1,13 @@
-const express = require('express');
-const router = express.Router();
-const StudentController = require('../controllers/studentController');
+import express from 'express';
+import StudentController from '../controllers/studentController';
+import { userSchema } from '../validators';
+import { validateRequest } from '../middleware/validation';
 
-router.post('/add', StudentController.addStudent);
-router.put('/edit', StudentController.editStudent);
+const router = express.Router();
+
+router.post('/add', validateRequest(userSchema), StudentController.addStudent);
+router.put('/edit', validateRequest(userSchema), StudentController.editStudent);
 router.put('/archive', StudentController.archiveStudent);
 router.put('/restore', StudentController.restoreStudent);
 
-module.exports = router;
+export default router;

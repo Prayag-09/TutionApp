@@ -1,71 +1,100 @@
-const Subject = require('../database/schema').Subject;
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
+import { StatusCodes } from 'http-status-codes';
+import subjectService from '../services/subjectService';
 
 const SubjectController = {
-	async addSubject(req: Request, res: Response) {
+	addSubject: async (
+		req: Request,
+		res: Response,
+		next: NextFunction
+	): Promise<any> => {
 		try {
 			const { name, description, status } = req.body;
-			const subject = new Subject({ name, description, status });
-			await subject.save();
-			res.status(201).json({ message: 'Subject added successfully', subject });
+			const subject = await subjectService.createSubject({
+				name,
+				description,
+				status,
+			});
+			res
+				.status(StatusCodes.CREATED)
+				.json({ message: 'Subject added successfully', subject });
 		} catch (error) {
-			res.status(500).json({ message: 'Failed to add subject', error });
+			next(error);
 		}
 	},
 
-	async editSubject(req: Request, res: Response) {
+	editSubject: async (
+		req: Request,
+		res: Response,
+		next: NextFunction
+	): Promise<any> => {
 		try {
 			const { subjectId, name, description, status } = req.body;
-			const subject = await Subject.findByIdAndUpdate(
-				subjectId,
-				{ name, description, status },
-				{ new: true }
-			);
-			if (!subject)
-				return res.status(404).json({ message: 'Subject not found' });
+			const subject = await subjectService.updateSubject(subjectId, {
+				name,
+				description,
+				status,
+			});
+			if (!subject) {
+				return res
+					.status(StatusCodes.NOT_FOUND)
+					.json({ message: 'Subject not found' });
+			}
 			res
-				.status(200)
+				.status(StatusCodes.OK)
 				.json({ message: 'Subject updated successfully', subject });
 		} catch (error) {
-			res.status(500).json({ message: 'Failed to update subject', error });
+			next(error);
 		}
 	},
 
-	async archiveSubject(req: Request, res: Response) {
+	archiveSubject: async (
+		req: Request,
+		res: Response,
+		next: NextFunction
+	): Promise<any> => {
 		try {
 			const { subjectId } = req.body;
-			const subject = await Subject.findByIdAndUpdate(
+			const subject = await subjectService.changeSubjectStatus(
 				subjectId,
-				{ status: 'Archived' },
-				{ new: true }
+				'Archive'
 			);
-			if (!subject)
-				return res.status(404).json({ message: 'Subject not found' });
+			if (!subject) {
+				return res
+					.status(StatusCodes.NOT_FOUND)
+					.json({ message: 'Subject not found' });
+			}
 			res
-				.status(200)
+				.status(StatusCodes.OK)
 				.json({ message: 'Subject archived successfully', subject });
 		} catch (error) {
-			res.status(500).json({ message: 'Failed to archive subject', error });
+			next(error);
 		}
 	},
 
-	async restoreSubject(req: Request, res: Response) {
+	restoreSubject: async (
+		req: Request,
+		res: Response,
+		next: NextFunction
+	): Promise<any> => {
 		try {
 			const { subjectId } = req.body;
-			const subject = await Subject.findByIdAndUpdate(
+			const subject = await subjectService.changeSubjectStatus(
 				subjectId,
-				{ status: 'Active' },
-				{ new: true }
+				'Live'
 			);
-			if (!subject)
-				return res.status(404).json({ message: 'Subject not found' });
+			if (!subject) {
+				return res
+					.status(StatusCodes.NOT_FOUND)
+					.json({ message: 'Subject not found' });
+			}
 			res
-				.status(200)
+				.status(StatusCodes.OK)
 				.json({ message: 'Subject restored successfully', subject });
 		} catch (error) {
-			res.status(500).json({ message: 'Failed to restore subject', error });
+			next(error);
 		}
 	},
 };
 
-module.exports = SubjectController;
+export default SubjectController;

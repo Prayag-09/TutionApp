@@ -1,10 +1,13 @@
-const express = require('express');
-const router = express.Router();
-const ParentController = require('../controllers/parentController');
+import express from 'express';
+import ParentController from '../controllers/parentController';
+import { userSchema } from '../validators';
+import { validateRequest } from '../middleware/validation';
 
-router.post('/add', ParentController.addParent);
-router.put('/edit', ParentController.editParent);
+const router = express.Router();
+
+router.post('/add', validateRequest(userSchema), ParentController.addParent);
+router.put('/edit', validateRequest(userSchema), ParentController.editParent);
 router.put('/archive', ParentController.archiveParent);
 router.put('/restore', ParentController.restoreParent);
 
-module.exports = router;
+export default router;

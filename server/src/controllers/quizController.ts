@@ -1,12 +1,14 @@
-const Quiz = require('../database/schema').Quiz;
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
+import { StatusCodes } from 'http-status-codes';
+import QuizService from '../services/quizService';
 
 const QuizController = {
-	async addQuiz(req: Request, res: Response) {
+	// Create a new quiz.
+	addQuiz: async (req: Request, res: Response, next: NextFunction) : Promise<any> => {
 		try {
 			const { name, gradeSubjectId, teacherId, timeLimit, maxMark, questions } =
 				req.body;
-			const quiz = new Quiz({
+			const quiz = await QuizService.createQuiz({
 				name,
 				gradeSubjectId,
 				teacherId,
@@ -14,14 +16,16 @@ const QuizController = {
 				maxMark,
 				questions,
 			});
-			await quiz.save();
-			res.status(201).json({ message: 'Quiz added successfully', quiz });
+			res
+				.status(StatusCodes.CREATED)
+				.json({ message: 'Quiz added successfully', quiz });
 		} catch (error) {
-			res.status(500).json({ message: 'Failed to add quiz', error });
+			next(error);
 		}
 	},
 
-	async editQuiz(req: Request, res: Response) {
+	// Update an existing quiz.
+	editQuiz: async (req: Request, res: Response, next: NextFunction) : Promise<any> => {
 		try {
 			const {
 				quizId,
@@ -32,47 +36,62 @@ const QuizController = {
 				maxMark,
 				questions,
 			} = req.body;
-			const quiz = await Quiz.findByIdAndUpdate(
-				quizId,
-				{ name, gradeSubjectId, teacherId, timeLimit, maxMark, questions },
-				{ new: true }
-			);
-			if (!quiz) return res.status(404).json({ message: 'Quiz not found' });
-			res.status(200).json({ message: 'Quiz updated successfully', quiz });
+			const quiz = await QuizService.updateQuiz(quizId, {
+				name,
+				gradeSubjectId,
+				teacherId,
+				timeLimit,
+				maxMark,
+				questions,
+			});
+			if (!quiz) {
+				return res
+					.status(StatusCodes.NOT_FOUND)
+					.json({ message: 'Quiz not found' });
+			}
+			res
+				.status(StatusCodes.OK)
+				.json({ message: 'Quiz updated successfully', quiz });
 		} catch (error) {
-			res.status(500).json({ message: 'Failed to update quiz', error });
+			next(error);
 		}
 	},
 
-	async archiveQuiz(req: Request, res: Response) {
+	// Archive a quiz.
+	archiveQuiz: async (req: Request, res: Response, next: NextFunction) : Promise<any> => {
 		try {
 			const { quizId } = req.body;
-			const quiz = await Quiz.findByIdAndUpdate(
-				quizId,
-				{ status: 'Archived' },
-				{ new: true }
-			);
-			if (!quiz) return res.status(404).json({ message: 'Quiz not found' });
-			res.status(200).json({ message: 'Quiz archived successfully', quiz });
+			const quiz = await QuizService.changeQuizStatus(quizId, 'Archived');
+			if (!quiz) {
+				return res
+					.status(StatusCodes.NOT_FOUND)
+					.json({ message: 'Quiz not found' });
+			}
+			res
+				.status(StatusCodes.OK)
+				.json({ message: 'Quiz archived successfully', quiz });
 		} catch (error) {
-			res.status(500).json({ message: 'Failed to archive quiz', error });
+			next(error);
 		}
 	},
 
-	async restoreQuiz(req: Request, res: Response) {
+	// Restore a quiz.
+	restoreQuiz: async (req: Request, res: Response, next: NextFunction) : Promise<any> => {
 		try {
 			const { quizId } = req.body;
-			const quiz = await Quiz.findByIdAndUpdate(
-				quizId,
-				{ status: 'Live' },
-				{ new: true }
-			);
-			if (!quiz) return res.status(404).json({ message: 'Quiz not found' });
-			res.status(200).json({ message: 'Quiz restored successfully', quiz });
+			const quiz = await QuizService.changeQuizStatus(quizId, 'Live');
+			if (!quiz) {
+				return res
+					.status(StatusCodes.NOT_FOUND)
+					.json({ message: 'Quiz not found' });
+			}
+			res
+				.status(StatusCodes.OK)
+				.json({ message: 'Quiz restored successfully', quiz });
 		} catch (error) {
-			res.status(500).json({ message: 'Failed to restore quiz', error });
+			next(error);
 		}
 	},
 };
 
-module.exports = QuizController;
+export default QuizController;

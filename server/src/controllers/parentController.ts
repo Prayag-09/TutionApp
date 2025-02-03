@@ -1,99 +1,75 @@
-const Parent = require('../database/schema').Parent;
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
+import { StatusCodes } from 'http-status-codes';
+import ParentService from '../services/parentService';
 
 const ParentController = {
-	async addParent(req: Request, res: Response) {
+	addParent: async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const {
-				name,
-				mobileNumber,
-				email,
-				residentialAddress,
-				city,
-				state,
-				country,
-				status,
-			} = req.body;
-			const parent = new Parent({
-				name,
-				mobileNumber,
-				email,
-				residentialAddress,
-				city,
-				state,
-				country,
-				status,
-			});
-			await parent.save();
-			res.status(201).json({ message: 'Parent added successfully', parent });
+			const parent = await ParentService.createParent(req.body);
+			res
+				.status(StatusCodes.CREATED)
+				.json({ message: 'Parent added successfully', parent });
 		} catch (error) {
-			res.status(500).json({ message: 'Failed to add parent', error });
+			next(error);
 		}
 	},
 
-	async editParent(req: Request, res: Response) {
+	editParent: async (req: Request, res: Response, next: NextFunction) : Promise<any> => {
 		try {
-			const {
-				parentId,
-				name,
-				mobileNumber,
-				email,
-				residentialAddress,
-				city,
-				state,
-				country,
-				status,
-			} = req.body;
-			const parent = await Parent.findByIdAndUpdate(
-				parentId,
-				{
-					name,
-					mobileNumber,
-					email,
-					residentialAddress,
-					city,
-					state,
-					country,
-					status,
-				},
-				{ new: true }
+			const parent = await ParentService.updateParent(
+				req.body.parentId,
+				req.body
 			);
-			if (!parent) return res.status(404).json({ message: 'Parent not found' });
-			res.status(200).json({ message: 'Parent updated successfully', parent });
+			if (!parent) {
+				return res
+					.status(StatusCodes.NOT_FOUND)
+					.json({ message: 'Parent not found' });
+			}
+			res
+				.status(StatusCodes.OK)
+				.json({ message: 'Parent updated successfully', parent });
 		} catch (error) {
-			res.status(500).json({ message: 'Failed to update parent', error });
+			next(error);
 		}
 	},
 
-	async archiveParent(req: Request, res: Response) {
+	archiveParent: async (req: Request, res: Response, next: NextFunction) : Promise<any> => {
 		try {
-			const { parentId } = req.body;
-			const parent = await Parent.findByIdAndUpdate(
-				parentId,
-				{ status: 'Archived' },
-				{ new: true }
+			const parent = await ParentService.changeParentStatus(
+				req.body.parentId,
+				'Archived'
 			);
-			if (!parent) return res.status(404).json({ message: 'Parent not found' });
-			res.status(200).json({ message: 'Parent archived successfully', parent });
+			if (!parent) {
+				return res
+					.status(StatusCodes.NOT_FOUND)
+					.json({ message: 'Parent not found' });
+			}
+			res
+				.status(StatusCodes.OK)
+				.json({ message: 'Parent archived successfully', parent });
 		} catch (error) {
-			res.status(500).json({ message: 'Failed to archive parent', error });
+			next(error);
 		}
 	},
 
-	async restoreParent(req: Request, res: Response) {
+	restoreParent: async (req: Request, res: Response, next: NextFunction) : Promise<any> => {
 		try {
-			const { parentId } = req.body;
-			const parent = await Parent.findByIdAndUpdate(
-				parentId,
-				{ status: 'Live' },
-				{ new: true }
+			const parent = await ParentService.changeParentStatus(
+				req.body.parentId,
+				'Live'
 			);
-			if (!parent) return res.status(404).json({ message: 'Parent not found' });
-			res.status(200).json({ message: 'Parent restored successfully', parent });
+			if (!parent) {
+				return res
+					.status(StatusCodes.NOT_FOUND)
+					.json({ message: 'Parent not found' });
+			}
+			res
+				.status(StatusCodes.OK)
+				.json({ message: 'Parent restored successfully', parent });
 		} catch (error) {
-			res.status(500).json({ message: 'Failed to restore parent', error });
+			next(error);
 		}
 	},
 };
 
-module.exports = ParentController;
+export default ParentController;

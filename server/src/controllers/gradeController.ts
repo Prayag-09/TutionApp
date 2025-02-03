@@ -1,62 +1,84 @@
-const Grade = require('../database/schema').Grade;
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
+import { StatusCodes } from 'http-status-codes';
+import GradeService from '../services/gradeService';
 
-const GradeController = {
-	async addGrade(req: Request, res: Response) {
+class GradeController {
+	static addGrade = async (req: Request, res: Response, next: NextFunction) : Promise<any> => {
 		try {
-			const { name, description, subjects, status } = req.body;
-			const grade = new Grade({ name, description, subjects, status });
-			await grade.save();
-			res.status(201).json({ message: 'Grade added successfully', grade });
+			const grade = await GradeService.createGrade(req.body);
+			res
+				.status(StatusCodes.CREATED)
+				.json({ message: 'Grade added successfully', grade });
 		} catch (error) {
-			res.status(500).json({ message: 'Failed to add grade', error });
+			next(error);
 		}
-	},
+	};
 
-	async editGrade(req: Request, res: Response) {
+	static editGrade = async (
+		req: Request,
+		res: Response,
+		next: NextFunction
+	) : Promise<any> => {
 		try {
-			const { gradeId, name, description, subjects, status } = req.body;
-			const grade = await Grade.findByIdAndUpdate(
-				gradeId,
-				{ name, description, subjects, status },
-				{ new: true }
+			const grade = await GradeService.updateGrade(req.body.gradeId, req.body);
+			if (!grade) {
+				return res
+					.status(StatusCodes.NOT_FOUND)
+					.json({ message: 'Grade not found' });
+			}
+			res
+				.status(StatusCodes.OK)
+				.json({ message: 'Grade updated successfully', grade });
+		} catch (error) {
+			next(error);
+		}
+	};
+
+	static archiveGrade = async (
+		req: Request,
+		res: Response,
+		next: NextFunction
+	) : Promise<any> => {
+		try {
+			const grade = await GradeService.changeGradeStatus(
+				req.body.gradeId,
+				'Archived'
 			);
-			if (!grade) return res.status(404).json({ message: 'Grade not found' });
-			res.status(200).json({ message: 'Grade updated successfully', grade });
+			if (!grade) {
+				return res
+					.status(StatusCodes.NOT_FOUND)
+					.json({ message: 'Grade not found' });
+			}
+			res
+				.status(StatusCodes.OK)
+				.json({ message: 'Grade archived successfully', grade });
 		} catch (error) {
-			res.status(500).json({ message: 'Failed to update grade', error });
+			next(error);
 		}
-	},
+	};
 
-	async archiveGrade(req: Request, res: Response) {
+	static restoreGrade = async (
+		req: Request,
+		res: Response,
+		next: NextFunction
+	) : Promise<any> => {
 		try {
-			const { gradeId } = req.body;
-			const grade = await Grade.findByIdAndUpdate(
-				gradeId,
-				{ status: 'Archived' },
-				{ new: true }
+			const grade = await GradeService.changeGradeStatus(
+				req.body.gradeId,
+				'Live'
 			);
-			if (!grade) return res.status(404).json({ message: 'Grade not found' });
-			res.status(200).json({ message: 'Grade archived successfully', grade });
+			if (!grade) {
+				return res
+					.status(StatusCodes.NOT_FOUND)
+					.json({ message: 'Grade not found' });
+			}
+			res
+				.status(StatusCodes.OK)
+				.json({ message: 'Grade restored successfully', grade });
 		} catch (error) {
-			res.status(500).json({ message: 'Failed to archive grade', error });
+			next(error);
 		}
-	},
+	};
+}
 
-	async restoreGrade(req: Request, res: Response) {
-		try {
-			const { gradeId } = req.body;
-			const grade = await Grade.findByIdAndUpdate(
-				gradeId,
-				{ status: 'Live' },
-				{ new: true }
-			);
-			if (!grade) return res.status(404).json({ message: 'Grade not found' });
-			res.status(200).json({ message: 'Grade restored successfully', grade });
-		} catch (error) {
-			res.status(500).json({ message: 'Failed to restore grade', error });
-		}
-	},
-};
-
-module.exports = GradeController;
+export default GradeController;
