@@ -12,12 +12,14 @@ import studentRoutes from './routes/studentRoutes';
 import feeRoutes from './routes/feeRoutes';
 import assignmentRoutes from './routes/assignmentRoutes';
 import quizRoutes from './routes/quizRoutes';
+import authRoutes from './routes/authRoutes';
 
 app.use(express.json());
 dotenv.config();
 const port = process.env.PORT || 3000;
 
 connectDB();
+app.use('/auth', authRoutes);
 
 app.use('/api/subjects', subjectRoutes);
 app.use('/api/grades', gradeRoutes);

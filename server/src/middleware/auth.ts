@@ -1,11 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-export const authenticate = (
-	req: Request,
-	res: Response,
-	next: NextFunction
-) => {
+const authenticate = (req: Request, res: Response, next: NextFunction) => {
 	const authHeader = req.headers.authorization;
 	if (!authHeader || !authHeader.startsWith('Bearer ')) {
 		return res
@@ -22,3 +18,5 @@ export const authenticate = (
 		res.status(401).json({ message: 'Invalid token' });
 	}
 };
+
+export default authenticate;

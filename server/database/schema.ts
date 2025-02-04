@@ -1,6 +1,26 @@
 import mongoose from 'mongoose';
 
-// Subject Schema
+const userSchema = new mongoose.Schema(
+	{
+		username: {
+			type: String,
+			required: true,
+		},
+		password: {
+			type: String,
+			required: true,
+		},
+		role: {
+			type: String,
+			enum: ['Principal', 'Teacher', 'Parent', 'Student'],
+			required: true,
+		},
+	},
+	{
+		timestamps: true,
+	}
+);
+
 const subjectSchema = new mongoose.Schema(
 	{
 		name: {
@@ -23,7 +43,6 @@ const subjectSchema = new mongoose.Schema(
 	}
 );
 
-// Grade Schema
 const gradeSchema = new mongoose.Schema(
 	{
 		name: {
