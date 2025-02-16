@@ -9,13 +9,16 @@ import gradeRoutes from './routes/gradeRoutes';
 import teacherRoutes from './routes/teacherRoutes';
 import parentRoutes from './routes/parentRoutes';
 import studentRoutes from './routes/studentRoutes';
-import feeRoutes from './routes/feeRoutes';
+import feeRoutes from './routes/fee-routes';
 import assignmentRoutes from './routes/assignmentRoutes';
 import quizRoutes from './routes/quizRoutes';
 import authorize from './middlewares/assignRoles';
 import authenticate from './middlewares/auth';
 import { loginSchema } from './validators';
 import authRoutes from './routes/authRoutes';
+import reportRoutes from './routes/report-routes';
+import tutionRoutes from './routes/tution-routes';
+import userManagementRoutes from './routes/user-management-routes';
 
 app.use(express.json());
 dotenv.config();
@@ -39,5 +42,8 @@ app.use(
 	assignmentRoutes
 );
 app.use('/api/quizzes', authorize(['admin', 'teacher', 'student']), quizRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/tution', tutionRoutes);
+app.use('/api/users', userManagementRoutes);
 
 app.listen(port, () => console.log(`Server connected on port ${port}`));

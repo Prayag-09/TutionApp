@@ -7,11 +7,9 @@ const dateSchema = z
 
 // ✅ Enum Values for Status
 const statusEnum = z.enum(['Live', 'Archive']);
-const activeStatusEnum = z.enum(['Live', 'Archive', 'Inactive']);
-const feeTypeEnum = z.enum(['Tuition', 'Hostel', 'Other']);
 
 // ✅ User Role Enum
-const userRoleEnum = z.enum(['Principal', 'Teacher', 'Student', 'Parent']);
+const userRoleEnum = z.enum(['principal', 'teacher', 'student', 'parent']);
 
 // ✅ Subject Validator
 export const subjectValidator = z.object({
@@ -102,7 +100,6 @@ export const marksValidator = z.object({
 
 // ✅ User Validator
 export const userValidator = z.object({
-	name: z.string({ required_error: 'Name is required' }).trim(),
 	email: z.string().email('Invalid email format'),
 	password: z.string().min(6, 'Password must be at least 6 characters'),
 	role: userRoleEnum,
@@ -113,7 +110,6 @@ export const feeValidator = z.object({
 	feeName: z.string().min(1, 'Fee name is required').trim(),
 	amount: z.number().positive('Amount must be positive'),
 	dueDate: dateSchema,
-	feeType: feeTypeEnum,
 	description: z.string().optional(),
 });
 
