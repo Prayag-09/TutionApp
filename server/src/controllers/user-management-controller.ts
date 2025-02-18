@@ -1,102 +1,104 @@
-import { Request, Response } from 'express';
 import {
-	registerUserService,
-	loginUserService,
-	getCurrentUserService,
 	registerTeacherService,
+	registerStudentService,
+	registerParentService,
 	getAllTeachersService,
 	getAllStudentsService,
 	getAllParentsService,
-} from '../services/user-management-service';
+} from '../services/user-management-services';
 
 /**
- * Register a new user
+ * Register a new teacher
  */
-export const registerUser = async (email, password, role) => {
-	return await registerUserService(email, password, role);
-};
-
-/**
- * Login user
- */
-export const loginUser = async (req: Request, res: Response) => {
+export const registerTeacher = async (teacherData: any) => {
 	try {
-		const user = await loginUserService(req.body);
-
-		if (user) {
-			return res.status(200).json(user);
-		}
-		res.status(401).json({ error: 'Invalid email or password' });
+		const response = await registerTeacherService(teacherData);
+		return response; // Feedback from the service
 	} catch (error) {
-		res.status(500).json({ error: 'Internal server error' });
+		if (error instanceof Error) {
+			throw new Error(error.message); // Pass error to be handled in the route
+		} else {
+			throw new Error('An unknown error occurred'); // Handle unknown error type
+		}
 	}
 };
 
 /**
- * Get currently logged-in user
+ * Register a new student
  */
-export const getCurrentUser = async (req: Request, res: Response) => {
+export const registerStudent = async (studentData: any) => {
 	try {
-		const userId = req.user!.id;
-		const user = await getCurrentUserService(userId);
-
-		if (user) {
-			return res.status(200).json(user);
-		}
-		res.status(404).json({ error: 'User not found' });
+		const response = await registerStudentService(studentData);
+		return response; // Feedback from the service
 	} catch (error) {
-		res.status(500).json({ error: 'Internal server error' });
+		if (error instanceof Error) {
+			throw new Error(error.message); // Pass error to be handled in the route
+		} else {
+			throw new Error('An unknown error occurred'); // Handle unknown error type
+		}
 	}
 };
 
 /**
- * Register a teacher (Only for principal)
+ * Register a new parent
  */
-export const registerTeacher = async (req: Request, res: Response) => {
+export const registerParent = async (parentData: any) => {
 	try {
-		const teacher = await registerTeacherService(req.body);
-
-		if (teacher) {
-			return res.status(201).json(teacher);
-		}
-		res.status(400).json({ error: 'Failed to register teacher' });
+		const response = await registerParentService(parentData);
+		return response; // Feedback from the service
 	} catch (error) {
-		res.status(500).json({ error: 'Internal server error' });
+		if (error instanceof Error) {
+			throw new Error(error.message); // Pass error to be handled in the route
+		} else {
+			throw new Error('An unknown error occurred'); // Handle unknown error type
+		}
 	}
 };
 
 /**
  * Get all teachers
  */
-export const getAllTeachers = async (req: Request, res: Response) => {
+export const getAllTeachers = async () => {
 	try {
-		const teachers = await getAllTeachersService();
-		res.status(200).json(teachers);
+		const response = await getAllTeachersService();
+		return response; // Feedback from the service
 	} catch (error) {
-		res.status(500).json({ error: 'Internal server error' });
+		if (error instanceof Error) {
+			throw new Error(error.message); // Pass error to be handled in the route
+		} else {
+			throw new Error('An unknown error occurred'); // Handle unknown error type
+		}
 	}
 };
 
 /**
  * Get all students
  */
-export const getAllStudents = async (req: Request, res: Response) => {
+export const getAllStudents = async () => {
 	try {
-		const students = await getAllStudentsService();
-		res.status(200).json(students);
+		const response = await getAllStudentsService();
+		return response; // Feedback from the service
 	} catch (error) {
-		res.status(500).json({ error: 'Internal server error' });
+		if (error instanceof Error) {
+			throw new Error(error.message); // Pass error to be handled in the route
+		} else {
+			throw new Error('An unknown error occurred'); // Handle unknown error type
+		}
 	}
 };
 
 /**
  * Get all parents
  */
-export const getAllParents = async (req: Request, res: Response) => {
+export const getAllParents = async () => {
 	try {
-		const parents = await getAllParentsService();
-		res.status(200).json(parents);
+		const response = await getAllParentsService();
+		return response; // Feedback from the service
 	} catch (error) {
-		res.status(500).json({ error: 'Internal server error' });
+		if (error instanceof Error) {
+			throw new Error(error.message); // Pass error to be handled in the route
+		} else {
+			throw new Error('An unknown error occurred'); // Handle unknown error type
+		}
 	}
 };

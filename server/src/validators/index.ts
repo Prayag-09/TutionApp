@@ -145,3 +145,64 @@ export const validate = (schema: z.ZodSchema<any>) => {
 		}
 	};
 };
+
+import { z } from 'zod';
+
+export const teacherValidator = z.object({
+	name: z.string().min(1, 'Name is required').trim(),
+	mobile: z.string().min(10, 'Mobile number is required').trim(),
+	email: z.string().email('Invalid email format'),
+	residentialAddress: z.object({
+		address: z.string().min(1, 'Address is required').trim(),
+		city: z.string().min(1, 'City is required').trim(),
+		state: z.string().min(1, 'State is required').trim(),
+		country: z.string().min(1, 'Country is required').trim(),
+		zipCode: z.string().optional(),
+	}),
+	qualification: z.string().optional().trim(),
+	status: z.enum(['Live', 'Archive']).default('Live'),
+	gradeSubjects: z
+		.array(
+			z.object({
+				gradeSubjectId: z.string().min(1, 'Grade Subject ID is required'),
+			})
+		)
+		.optional(),
+});
+
+export const studentValidator = z.object({
+	name: z.string().min(1, 'Name is required').trim(),
+	mobile: z.string().optional().trim(),
+	email: z.string().email('Invalid email format').optional(),
+	residentialAddress: z.object({
+		address: z.string().min(1, 'Address is required').trim(),
+		city: z.string().min(1, 'City is required').trim(),
+		state: z.string().min(1, 'State is required').trim(),
+		country: z.string().min(1, 'Country is required').trim(),
+	}),
+	parentId: z.string().min(1, 'Parent ID is required'),
+	gradeId: z.string().min(1, 'Grade ID is required'),
+	subjects: z
+		.array(
+			z.object({
+				subjectId: z.string().min(1, 'Subject ID is required'),
+				teacherId: z.string().min(1, 'Teacher ID is required'),
+				status: z.enum(['Live', 'Archive']).default('Live'),
+			})
+		)
+		.optional(),
+	status: z.enum(['Live', 'Archive']).default('Live'),
+});
+
+export const parentValidator = z.object({
+	name: z.string().min(1, 'Name is required').trim(),
+	mobile: z.string().min(10, 'Mobile number is required').trim(),
+	email: z.string().email('Invalid email format').optional(),
+	residentialAddress: z.object({
+		address: z.string().min(1, 'Address is required').trim(),
+		city: z.string().min(1, 'City is required').trim(),
+		state: z.string().min(1, 'State is required').trim(),
+		country: z.string().min(1, 'Country is required').trim(),
+	}),
+	status: z.enum(['Live', 'Archive']).default('Live'),
+});

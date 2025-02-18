@@ -1,105 +1,136 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import { IUser, User } from '../models/User';
-import { Error } from 'mongoose';
+import { Teacher } from '../models/Teacher';
+import { Student } from '../models/Student';
+import { Parent } from '../models/Parent';
+import {
+	teacherValidator,
+	studentValidator,
+	parentValidator,
+} from '../validators/index';
 
-// Register a new user
-export const registerUserService = async (
-	email: string,
-	password: string,
-	role: string
-) => {
-	const existingUser = await User.findOne({ email });
-	if (existingUser) {
-		throw new Error('User already exists');
-	}
-
-	// Hash password
-	const hashedPassword = await bcrypt.hash(password, 10);
-
-	// Create user
-	const newUser = new User({
-		email,
-		password: hashedPassword,
-		role,
-	});
-	await newUser.save();
-
-	return { id: newUser.id, email: newUser.email, role: newUser.role };
-};
-
-// Login user and return token
-export const loginUserService = async ({
-	email,
-	password,
-}: {
-	email: string;
-	password: string;
-}) => {
-	// Find user by email
-	const user = await User.findOne({ email });
-	if (!user) {
-		throw new Error('Invalid email or password');
-	}
-
-	// Compare passwords
-	const isMatch = await bcrypt.compare(password, user.password);
-	if (!isMatch) {
-		throw new Error('Invalid email or password');
-	}
-
-	// Generate JWT token
-	const token = jwt.sign(
-		{ id: user.id, role: user.role },
-		process.env.JWT_SECRET!,
-		{
-			expiresIn: '7d',
-		}
-	);
-
-	return { id: user.id, email: user.email, role: user.role, token };
-};
-
-// Get currently logged-in user
-export const getCurrentUserService = async (userId: string) => {
-	const user = await User.findById(userId).select('-password'); // Exclude password field
-	if (!user) {
-		throw new Error('User not found');
-	}
-	return user;
-};
-
-// Register a new teacher (Only for principal)
+/**
+ * Register Teacher Service
+ */
 export const registerTeacherService = async (teacherData: Partial<IUser>) => {
-	// Ensure role is set to 'teacher'
-	const teacher = await registerUserService(
-		teacherData.email!,
-		teacherData.password!,
-		'teacher'
-	);
-	return teacher;
+	// Validate teacher data
+	const validatedData = teacherValidator.safeParse(teacherData);
+	if (!validatedData.success) {
+		throw new Error(
+			validatedData.error.errors.map((err) => err.message).join(', ')
+		);
+	}
+
+	// Hash password before saving
+	const hashedPassword = await bcrypt.hash(teacherData.password!, 10);
+
+	// Create User record
+	const user = new User({
+		email: teacherData.email,
+		password: hashedPassword,
+		role: 'teacher',
+	});
+	await user.save();
+
+	// Create Teacher record
+	const teacher = new Teacher({
+		...validatedData.data,
+		email: user.email,
+	});
+	await teacher.save();
+
+	// Return service feedback in JSON
+	return { id: user.id, email: user.email, role: user.role };
 };
 
 /**
- * Get all teachers
+ * Register Student Service
+ */
+export const registerStudentService = async (studentData: Partial<IUser>) => {
+	// Validate student data
+	const validatedData = studentValidator.safeParse(studentData);
+	if (!validatedData.success) {
+		throw new Error(
+			validatedData.error.errors.map((err) => err.message).join(', ')
+		);
+	}
+
+	// Hash password before saving
+	const hashedPassword = await bcrypt.hash(studentData.password!, 10);
+
+	// Create User record
+	const user = new User({
+		email: studentData.email,
+		password: hashedPassword,
+		role: 'student',
+	});
+	await user.save();
+
+	// Create Student record
+	const student = new Student({
+		...validatedData.data,
+		email: user.email,
+	});
+	await student.save();
+
+	// Return service feedback in JSON
+	return { id: user.id, email: user.email, role: user.role };
+};
+
+/**
+ * Register Parent Service
+ */
+export const registerParentService = async (parentData: Partial<IUser>) => {
+	// Validate parent data
+	const validatedData = parentValidator.safeParse(parentData);
+	if (!validatedData.success) {
+		throw new Error(
+			validatedData.error.errors.map((err) => err.message).join(', ')
+		);
+	}
+
+	// Hash password before saving
+	const hashedPassword = await bcrypt.hash(parentData.password!, 10);
+
+	// Create User record
+	const user = new User({
+		email: parentData.email,
+		password: hashedPassword,
+		role: 'parent',
+	});
+	await user.save();
+
+	// Create Parent record
+	const parent = new Parent({
+		...validatedData.data,
+		email: user.email,
+	});
+	await parent.save();
+
+	// Return service feedback in JSON
+	return { id: user.id, email: user.email, role: user.role };
+};
+
+/**
+ * Get All Teachers Service
  */
 export const getAllTeachersService = async () => {
-	const teachers = await User.find({ role: 'teacher' }).select('-password');
-	return teachers;
+	const teachers = await Teacher.find().select('-password');
+	return teachers; // Return JSON feedback
 };
 
 /**
- * Get all students
+ * Get All Students Service
  */
 export const getAllStudentsService = async () => {
-	const students = await User.find({ role: 'student' }).select('-password');
-	return students;
+	const students = await Student.find().select('-password');
+	return students; // Return JSON feedback
 };
 
 /**
- * Get all parents
+ * Get All Parents Service
  */
 export const getAllParentsService = async () => {
-	const parents = await User.find({ role: 'parent' }).select('-password');
-	return parents;
+	const parents = await Parent.find().select('-password');
+	return parents; // Return JSON feedback
 };
