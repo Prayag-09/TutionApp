@@ -1,136 +1,132 @@
 import bcrypt from 'bcrypt';
-import { IUser, User } from '../models/User';
+import { User } from '../models/User';
 import { Teacher } from '../models/Teacher';
 import { Student } from '../models/Student';
 import { Parent } from '../models/Parent';
-import {
-	teacherValidator,
-	studentValidator,
-	parentValidator,
-} from '../validators/index';
 
 /**
- * Register Teacher Service
+ * Register a new Teacher
  */
-export const registerTeacherService = async (teacherData: Partial<IUser>) => {
-	// Validate teacher data
-	const validatedData = teacherValidator.safeParse(teacherData);
-	if (!validatedData.success) {
+export const registerTeacherService = async (teacherData: any) => {
+	try {
+		// Check for duplicate email
+		if (await User.exists({ email: teacherData.email })) {
+			throw new Error('Email already in use');
+		}
+
+		// Hash password
+		const hashedPassword = await bcrypt.hash(teacherData.password, 10);
+
+		// Create User record
+		const user = await new User({
+			email: teacherData.email,
+			password: hashedPassword,
+			role: 'teacher',
+		}).save();
+
+		// Create Teacher record
+		const teacher = await new Teacher({
+			...teacherData,
+			email: user.email,
+		}).save();
+
+		return teacher;
+	} catch (error) {
 		throw new Error(
-			validatedData.error.errors.map((err) => err.message).join(', ')
+			error instanceof Error ? error.message : 'An unknown error occurred'
 		);
 	}
-
-	// Hash password before saving
-	const hashedPassword = await bcrypt.hash(teacherData.password!, 10);
-
-	// Create User record
-	const user = new User({
-		email: teacherData.email,
-		password: hashedPassword,
-		role: 'teacher',
-	});
-	await user.save();
-
-	// Create Teacher record
-	const teacher = new Teacher({
-		...validatedData.data,
-		email: user.email,
-	});
-	await teacher.save();
-
-	// Return service feedback in JSON
-	return { id: user.id, email: user.email, role: user.role };
 };
 
 /**
- * Register Student Service
+ * Register a new Student
  */
-export const registerStudentService = async (studentData: Partial<IUser>) => {
-	// Validate student data
-	const validatedData = studentValidator.safeParse(studentData);
-	if (!validatedData.success) {
+export const registerStudentService = async (studentData: any) => {
+	try {
+		if (await User.exists({ email: studentData.email })) {
+			throw new Error('Email already in use');
+		}
+
+		const hashedPassword = await bcrypt.hash(studentData.password, 10);
+
+		const user = await new User({
+			email: studentData.email,
+			password: hashedPassword,
+			role: 'student',
+		}).save();
+
+		const student = await new Student({
+			...studentData,
+			email: user.email,
+		}).save();
+
+		return student;
+	} catch (error) {
 		throw new Error(
-			validatedData.error.errors.map((err) => err.message).join(', ')
+			error instanceof Error ? error.message : 'An unknown error occurred'
 		);
 	}
-
-	// Hash password before saving
-	const hashedPassword = await bcrypt.hash(studentData.password!, 10);
-
-	// Create User record
-	const user = new User({
-		email: studentData.email,
-		password: hashedPassword,
-		role: 'student',
-	});
-	await user.save();
-
-	// Create Student record
-	const student = new Student({
-		...validatedData.data,
-		email: user.email,
-	});
-	await student.save();
-
-	// Return service feedback in JSON
-	return { id: user.id, email: user.email, role: user.role };
 };
 
 /**
- * Register Parent Service
+ * Register a new Parent
  */
-export const registerParentService = async (parentData: Partial<IUser>) => {
-	// Validate parent data
-	const validatedData = parentValidator.safeParse(parentData);
-	if (!validatedData.success) {
+export const registerParentService = async (parentData: any) => {
+	try {
+		if (await User.exists({ email: parentData.email })) {
+			throw new Error('Email already in use');
+		}
+
+		const hashedPassword = await bcrypt.hash(parentData.password, 10);
+
+		const user = await new User({
+			email: parentData.email,
+			password: hashedPassword,
+			role: 'parent',
+		}).save();
+
+		const parent = await new Parent({
+			...parentData,
+			email: user.email,
+		}).save();
+
+		return parent;
+	} catch (error) {
 		throw new Error(
-			validatedData.error.errors.map((err) => err.message).join(', ')
+			error instanceof Error ? error.message : 'An unknown error occurred'
 		);
 	}
-
-	// Hash password before saving
-	const hashedPassword = await bcrypt.hash(parentData.password!, 10);
-
-	// Create User record
-	const user = new User({
-		email: parentData.email,
-		password: hashedPassword,
-		role: 'parent',
-	});
-	await user.save();
-
-	// Create Parent record
-	const parent = new Parent({
-		...validatedData.data,
-		email: user.email,
-	});
-	await parent.save();
-
-	// Return service feedback in JSON
-	return { id: user.id, email: user.email, role: user.role };
 };
 
 /**
- * Get All Teachers Service
+ * Get All Teachers
  */
 export const getAllTeachersService = async () => {
-	const teachers = await Teacher.find().select('-password');
-	return teachers; // Return JSON feedback
+	try {
+		return await Teacher.find().select('-password');
+	} catch (error) {
+		throw new Error('Failed to retrieve teachers');
+	}
 };
 
 /**
- * Get All Students Service
+ * Get All Students
  */
 export const getAllStudentsService = async () => {
-	const students = await Student.find().select('-password');
-	return students; // Return JSON feedback
+	try {
+		return await Student.find().select('-password');
+	} catch (error) {
+		throw new Error('Failed to retrieve students');
+	}
 };
 
 /**
- * Get All Parents Service
+ * Get All Parents
  */
 export const getAllParentsService = async () => {
-	const parents = await Parent.find().select('-password');
-	return parents; // Return JSON feedback
+	try {
+		return await Parent.find().select('-password');
+	} catch (error) {
+		throw new Error('Failed to retrieve parents');
+	}
 };

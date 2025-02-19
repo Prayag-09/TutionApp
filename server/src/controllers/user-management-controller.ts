@@ -12,14 +12,10 @@ import {
  */
 export const registerTeacher = async (teacherData: any) => {
 	try {
-		const response = await registerTeacherService(teacherData);
-		return response; // Feedback from the service
-	} catch (error) {
-		if (error instanceof Error) {
-			throw new Error(error.message); // Pass error to be handled in the route
-		} else {
-			throw new Error('An unknown error occurred'); // Handle unknown error type
-		}
+		const teacher = await registerTeacherService(teacherData);
+		return { success: true, data: teacher };
+	} catch (error: any) {
+		return { success: false, error: error.message };
 	}
 };
 
@@ -28,14 +24,10 @@ export const registerTeacher = async (teacherData: any) => {
  */
 export const registerStudent = async (studentData: any) => {
 	try {
-		const response = await registerStudentService(studentData);
-		return response; // Feedback from the service
-	} catch (error) {
-		if (error instanceof Error) {
-			throw new Error(error.message); // Pass error to be handled in the route
-		} else {
-			throw new Error('An unknown error occurred'); // Handle unknown error type
-		}
+		const student = await registerStudentService(studentData);
+		return { success: true, data: student };
+	} catch (error: any) {
+		return { success: false, error: error.message };
 	}
 };
 
@@ -44,14 +36,10 @@ export const registerStudent = async (studentData: any) => {
  */
 export const registerParent = async (parentData: any) => {
 	try {
-		const response = await registerParentService(parentData);
-		return response; // Feedback from the service
-	} catch (error) {
-		if (error instanceof Error) {
-			throw new Error(error.message); // Pass error to be handled in the route
-		} else {
-			throw new Error('An unknown error occurred'); // Handle unknown error type
-		}
+		const parent = await registerParentService(parentData);
+		return { success: true, data: parent };
+	} catch (error: any) {
+		return { success: false, error: error.message };
 	}
 };
 
@@ -60,14 +48,10 @@ export const registerParent = async (parentData: any) => {
  */
 export const getAllTeachers = async () => {
 	try {
-		const response = await getAllTeachersService();
-		return response; // Feedback from the service
-	} catch (error) {
-		if (error instanceof Error) {
-			throw new Error(error.message); // Pass error to be handled in the route
-		} else {
-			throw new Error('An unknown error occurred'); // Handle unknown error type
-		}
+		const teachers = await getAllTeachersService();
+		return { success: true, data: teachers };
+	} catch (error: any) {
+		return { success: false, error: error.message };
 	}
 };
 
@@ -76,14 +60,10 @@ export const getAllTeachers = async () => {
  */
 export const getAllStudents = async () => {
 	try {
-		const response = await getAllStudentsService();
-		return response; // Feedback from the service
-	} catch (error) {
-		if (error instanceof Error) {
-			throw new Error(error.message); // Pass error to be handled in the route
-		} else {
-			throw new Error('An unknown error occurred'); // Handle unknown error type
-		}
+		const students = await getAllStudentsService();
+		return { success: true, data: students };
+	} catch (error: any) {
+		return { success: false, error: error.message };
 	}
 };
 
@@ -92,13 +72,9 @@ export const getAllStudents = async () => {
  */
 export const getAllParents = async () => {
 	try {
-		const response = await getAllParentsService();
-		return response; // Feedback from the service
-	} catch (error) {
-		if (error instanceof Error) {
-			throw new Error(error.message); // Pass error to be handled in the route
-		} else {
-			throw new Error('An unknown error occurred'); // Handle unknown error type
-		}
+		const parents = await getAllParentsService();
+		return { success: true, data: parents };
+	} catch (error: any) {
+		return { success: false, error: error.message };
 	}
 };

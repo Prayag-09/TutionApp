@@ -1,24 +1,18 @@
 import { z } from 'zod';
 
-// ✅ Common Date Validation
 const dateSchema = z
 	.string()
 	.refine((val) => !isNaN(Date.parse(val)), { message: 'Invalid date format' });
 
-// ✅ Enum Values for Status
 const statusEnum = z.enum(['Live', 'Archive']);
-
-// ✅ User Role Enum
 const userRoleEnum = z.enum(['principal', 'teacher', 'student', 'parent']);
 
-// ✅ Subject Validator
 export const subjectValidator = z.object({
 	name: z.string().min(1, 'Subject name is required').trim(),
 	description: z.string().trim().optional(),
 	status: statusEnum.default('Live'),
 });
 
-// ✅ Grade Validator
 export const gradeValidator = z.object({
 	name: z.string().min(1, 'Grade name is required').trim(),
 	description: z.string().trim().optional(),
@@ -33,79 +27,60 @@ export const gradeValidator = z.object({
 		.min(1, 'At least one subject is required'),
 });
 
-// ✅ Assignment Validator
 export const assignmentValidator = z.object({
-	name: z.string({ required_error: 'Assignment title is required' }).trim(),
-	gradeSubjectId: z.string({ required_error: 'Grade Subject ID is required' }),
-	teacherId: z.string({ required_error: 'Teacher ID is required' }),
+	name: z.string().min(1, 'Assignment title is required').trim(),
+	gradeSubjectId: z.string().min(1, 'Grade Subject ID is required'),
+	teacherId: z.string().min(1, 'Teacher ID is required'),
 	details: z.string().min(1, 'Assignment details are required').trim(),
 	file: z.string().optional(),
 	maximumMark: z.number().positive('Maximum mark must be positive'),
 	status: statusEnum.default('Live'),
 });
 
-// ✅ Quiz Validator
 export const quizValidator = z.object({
-	name: z.string({ required_error: 'Quiz name is required' }).trim(),
-	gradeSubjectId: z.string({ required_error: 'Grade Subject ID is required' }),
-	teacherId: z.string({ required_error: 'Teacher ID is required' }),
-	timeLimit: z
-		.number({ required_error: 'Time limit is required' })
-		.min(1, 'Time limit must be at least 1 minute'),
-	maxMark: z
-		.number({ required_error: 'Maximum mark is required' })
-		.min(0, 'Max mark must be non-negative'),
+	name: z.string().min(1, 'Quiz name is required').trim(),
+	gradeSubjectId: z.string().min(1, 'Grade Subject ID is required'),
+	teacherId: z.string().min(1, 'Teacher ID is required'),
+	timeLimit: z.number().min(1, 'Time limit must be at least 1 minute'),
+	maxMark: z.number().min(0, 'Max mark must be non-negative'),
 	questions: z
 		.array(
 			z.object({
-				question: z.string({ required_error: 'Question is required' }).trim(),
-				options: z
-					.array(z.string({ required_error: 'Option is required' }).trim())
-					.min(2, 'At least two options required'),
-				correctOption: z.number({
-					required_error: 'Correct answer index is required',
-				}),
+				question: z.string().min(1, 'Question is required').trim(),
+				options: z.array(z.string().min(1, 'Option is required').trim()).min(2),
+				correctOption: z.number(),
 			})
 		)
 		.min(1, 'At least one question is required'),
 	status: statusEnum.default('Live'),
 });
 
-// ✅ Quiz Attempt Validator (Student's Attempt)
 export const quizStudentValidator = z.object({
-	quizId: z.string({ required_error: 'Quiz ID is required' }),
-	studentId: z.string({ required_error: 'Student ID is required' }),
+	quizId: z.string().min(1, 'Quiz ID is required'),
+	studentId: z.string().min(1, 'Student ID is required'),
 	mark: z.number().optional(),
 	status: z.enum(['Attempted', 'Not Attempted']).default('Not Attempted'),
 });
 
-// ✅ Exam Validator
 export const examValidator = z.object({
-	name: z.string({ required_error: 'Exam name is required' }).trim(),
-	gradeSubjectId: z.string({ required_error: 'Grade Subject ID is required' }),
-	teacherId: z.string({ required_error: 'Teacher ID is required' }),
-	maxMark: z
-		.number({ required_error: 'Maximum mark is required' })
-		.min(0, 'Maximum mark must be positive'),
+	name: z.string().min(1, 'Exam name is required').trim(),
+	gradeSubjectId: z.string().min(1, 'Grade Subject ID is required'),
+	teacherId: z.string().min(1, 'Teacher ID is required'),
+	maxMark: z.number().min(0, 'Maximum mark must be positive'),
 });
 
-// ✅ Marks Validator (Exam Results)
 export const marksValidator = z.object({
-	examId: z.string({ required_error: 'Exam ID is required' }),
-	studentId: z.string({ required_error: 'Student ID is required' }),
-	mark: z
-		.number({ required_error: 'Mark is required' })
-		.min(0, 'Mark must be positive'),
+	examId: z.string().min(1, 'Exam ID is required'),
+	studentId: z.string().min(1, 'Student ID is required'),
+	mark: z.number().min(0, 'Mark must be positive'),
 });
 
-// ✅ User Validator
 export const userValidator = z.object({
 	email: z.string().email('Invalid email format'),
 	password: z.string().min(6, 'Password must be at least 6 characters'),
 	role: userRoleEnum,
 });
 
-// ✅ Fee Validator
 export const feeValidator = z.object({
 	feeName: z.string().min(1, 'Fee name is required').trim(),
 	amount: z.number().positive('Amount must be positive'),
@@ -113,14 +88,12 @@ export const feeValidator = z.object({
 	description: z.string().optional(),
 });
 
-// ✅ Grade-Subject Validator (Mapping subjects to grades)
 export const gradeSubjectValidator = z.object({
 	gradeId: z.string().min(1, 'Grade ID is required'),
 	subjectId: z.string().min(1, 'Subject ID is required'),
 	status: statusEnum.default('Live'),
 });
 
-// ✅ Student-Subject Validator (Mapping students to subjects and teachers)
 export const studentSubjectValidator = z.object({
 	studentId: z.string().min(1, 'Student ID is required'),
 	subjectId: z.string().min(1, 'Subject ID is required'),
@@ -128,25 +101,10 @@ export const studentSubjectValidator = z.object({
 	status: statusEnum.default('Live'),
 });
 
-// ✅ Login Validator
 export const loginValidator = z.object({
 	email: z.string().min(1, 'Email is required'),
 	password: z.string().min(1, 'Password is required'),
 });
-
-// ✅ Middleware to Validate Request Data
-export const validate = (schema: z.ZodSchema<any>) => {
-	return (req: any, res: any, next: any) => {
-		try {
-			schema.parse(req.body);
-			next();
-		} catch (err: any) {
-			res.status(400).json({ errors: err.errors });
-		}
-	};
-};
-
-import { z } from 'zod';
 
 export const teacherValidator = z.object({
 	name: z.string().min(1, 'Name is required').trim(),
@@ -159,8 +117,8 @@ export const teacherValidator = z.object({
 		country: z.string().min(1, 'Country is required').trim(),
 		zipCode: z.string().optional(),
 	}),
-	qualification: z.string().optional().trim(),
-	status: z.enum(['Live', 'Archive']).default('Live'),
+	qualification: z.string().trim().optional(),
+	status: statusEnum.default('Live'),
 	gradeSubjects: z
 		.array(
 			z.object({
@@ -172,7 +130,7 @@ export const teacherValidator = z.object({
 
 export const studentValidator = z.object({
 	name: z.string().min(1, 'Name is required').trim(),
-	mobile: z.string().optional().trim(),
+	mobile: z.string().trim().optional(),
 	email: z.string().email('Invalid email format').optional(),
 	residentialAddress: z.object({
 		address: z.string().min(1, 'Address is required').trim(),
@@ -187,11 +145,11 @@ export const studentValidator = z.object({
 			z.object({
 				subjectId: z.string().min(1, 'Subject ID is required'),
 				teacherId: z.string().min(1, 'Teacher ID is required'),
-				status: z.enum(['Live', 'Archive']).default('Live'),
+				status: statusEnum.default('Live'),
 			})
 		)
 		.optional(),
-	status: z.enum(['Live', 'Archive']).default('Live'),
+	status: statusEnum.default('Live'),
 });
 
 export const parentValidator = z.object({
@@ -204,5 +162,15 @@ export const parentValidator = z.object({
 		state: z.string().min(1, 'State is required').trim(),
 		country: z.string().min(1, 'Country is required').trim(),
 	}),
-	status: z.enum(['Live', 'Archive']).default('Live'),
+	status: statusEnum.default('Live'),
 });
+
+export const validate =
+	(schema: z.ZodSchema) => (req: any, res: any, next: any) => {
+		try {
+			schema.parse(req.body);
+			next();
+		} catch (err: any) {
+			res.status(400).json({ errors: err.errors });
+		}
+	};

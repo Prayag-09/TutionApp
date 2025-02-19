@@ -28,8 +28,8 @@
 	"main": "src/index.js",
 	"scripts": {
 		"build": "tsc",
-		"start": "tsc && node dist/index.js",
-		"dev": "nodemon --watch src --exec ts-node src/index.ts"
+		"start": "tsc && node dist/server.js",
+		"dev": "nodemon --watch src --exec ts-node src/server.ts"
 	},
 	"keywords": [],
 	"author": "",
