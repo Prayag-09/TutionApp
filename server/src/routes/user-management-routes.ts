@@ -8,6 +8,9 @@ import {
 	getAllParents,
 	getAllStudents,
 	getAllTeachers,
+	editTeacher,
+	editStudent,
+	editParent,
 } from '../controllers/user-management-controller';
 import {
 	parentValidator,
@@ -17,6 +20,15 @@ import {
 
 const router = express.Router();
 
+// Utility function for error responses
+const handleErrorResponse = (res: Response, error: any, message: string) => {
+	console.error(error);
+	res.status(error?.statusCode || 500).json({
+		success: false,
+		error: error?.message || message,
+		details: error?.details || [],
+	});
+};
 
 // Register Teacher
 router.post(
@@ -26,25 +38,10 @@ router.post(
 	validate(teacherValidator),
 	async (req: Request, res: Response) => {
 		try {
-			const teacherData = {
-				teacherName: req.body.teacherName,
-				mobileNumber: req.body.mobileNumber,
-				email: req.body.email,
-				residentialAddress: req.body.residentialAddress,
-				qualification: req.body.qualification,
-				status: req.body.status,
-				gradeSubjects: req.body.gradeSubjects,
-				password: req.body.password,
-			};
-			const teacher = await registerTeacher(teacherData);
-			res.status(201).json(teacher);
+			const teacher = await registerTeacher(req.body);
+			res.status(201).json({ success: true, data: teacher });
 		} catch (error) {
-			res
-				.status(500)
-				.json({
-					error:
-						error instanceof Error ? error.message : 'Internal server error',
-				});
+			handleErrorResponse(res, error, 'Unable to register teacher');
 		}
 	}
 );
@@ -53,21 +50,14 @@ router.post(
 router.post(
 	'/register/parent',
 	authenticate,
-	authorize(['principal']),
+	authorize(['principal', 'teacher']),
 	validate(parentValidator),
 	async (req: Request, res: Response) => {
 		try {
-			const parentData = {
-				name: req.body.name,
-				mobile: req.body.mobile,
-				email: req.body.email,
-				residentialAddress: req.body.residentialAddress,
-				status: req.body.status,
-			};
-			const parent = await registerParent(parentData);
-			res.status(201).json(parent);
+			const parent = await registerParent(req.body);
+			res.status(201).json({ success: true, data: parent });
 		} catch (error) {
-			res.status(500).json({ error: 'Internal server error' });
+			handleErrorResponse(res, error, 'Unable to register parent');
 		}
 	}
 );
@@ -80,20 +70,10 @@ router.post(
 	validate(studentValidator),
 	async (req: Request, res: Response) => {
 		try {
-			const studentData = {
-				name: req.body.name,
-				mobile: req.body.mobile,
-				email: req.body.email,
-				residentialAddress: req.body.residentialAddress,
-				parentId: req.body.parentId,
-				gradeId: req.body.gradeId,
-				subjects: req.body.subjects,
-				status: req.body.status,
-			};
-			const student = await registerStudent(studentData);
-			res.status(201).json(student);
+			const student = await registerStudent(req.body);
+			res.status(201).json({ success: true, data: student });
 		} catch (error) {
-			res.status(500).json({ error: 'Internal server error' });
+			handleErrorResponse(res, error, 'Unable to register student');
 		}
 	}
 );
@@ -103,12 +83,12 @@ router.get(
 	'/parents',
 	authenticate,
 	authorize(['principal']),
-	async (_req, res) => {
+	async (_req: Request, res: Response) => {
 		try {
 			const parents = await getAllParents();
-			res.status(200).json(parents);
+			res.status(200).json({ success: true, data: parents });
 		} catch (error) {
-			res.status(500).json({ error: 'Internal server error' });
+			handleErrorResponse(res, error, 'Unable to retrieve parents');
 		}
 	}
 );
@@ -118,12 +98,12 @@ router.get(
 	'/students',
 	authenticate,
 	authorize(['principal', 'teacher']),
-	async (_req, res) => {
+	async (_req: Request, res: Response) => {
 		try {
 			const students = await getAllStudents();
-			res.status(200).json(students);
+			res.status(200).json({ success: true, data: students });
 		} catch (error) {
-			res.status(500).json({ error: 'Internal server error' });
+			handleErrorResponse(res, error, 'Unable to retrieve students');
 		}
 	}
 );
@@ -133,12 +113,72 @@ router.get(
 	'/teachers',
 	authenticate,
 	authorize(['principal']),
-	async (_req, res) => {
+	async (_req: Request, res: Response) => {
 		try {
 			const teachers = await getAllTeachers();
-			res.status(200).json(teachers);
+			res.status(200).json({ success: true, data: teachers });
 		} catch (error) {
-			res.status(500).json({ error: 'Internal server error' });
+			handleErrorResponse(res, error, 'Unable to retrieve teachers');
+		}
+	}
+);
+
+// Edit Teacher
+router.put(
+	'/edit/teacher',
+	authenticate,
+	authorize(['principal']),
+	async (req: Request, res: Response) => {
+		try {
+			const teacherData = req.body;
+			const updatedTeacher = await editTeacher(teacherData);
+			res.status(200).json({
+				success: true,
+				message: 'Successfully updated the teacher',
+				data: updatedTeacher,
+			});
+		} catch (error) {
+			handleErrorResponse(res, error, 'Unable to update teacher details');
+		}
+	}
+);
+
+// Edit Student
+router.put(
+	'/edit/student',
+	authenticate,
+	authorize(['principal', 'teacher']),
+	async (req: Request, res: Response) => {
+		try {
+			const studentData = req.body;
+			const updatedStudent = await editStudent(studentData);
+			res.status(200).json({
+				success: true,
+				message: 'Successfully updated the student',
+				data: updatedStudent,
+			});
+		} catch (error) {
+			handleErrorResponse(res, error, 'Unable to update student details');
+		}
+	}
+);
+
+// Edit Parent
+router.put(
+	'/edit/parent',
+	authenticate,
+	authorize(['principal', 'teacher', 'student']),
+	async (req: Request, res: Response) => {
+		try {
+			const parentData = req.body;
+			const updatedParent = await editParent(parentData);
+			res.status(200).json({
+				success: true,
+				message: 'Successfully updated the parent',
+				data: updatedParent,
+			});
+		} catch (error) {
+			handleErrorResponse(res, error, 'Unable to update parent details');
 		}
 	}
 );
