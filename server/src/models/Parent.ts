@@ -18,18 +18,25 @@ export interface IParent extends Document {
 
 const parentSchema = new Schema<IParent>(
 	{
-		name: { type: String, required: true },
-		mobile: { type: String, required: true },
-		email: { type: String },
+		name: { type: String, required: true, trim: true },
+		mobile: { type: String, required: true, unique: true, trim: true },
+		email: {
+			type: String,
+			trim: true,
+			lowercase: true,
+			unique: true,
+			sparse: true, // Allows uniqueness but doesn't enforce if email is not provided
+			match: [/\S+@\S+\.\S+/, 'Invalid email format'],
+		},
 		residentialAddress: {
-			address: { type: String },
-			city: { type: String },
-			state: { type: String },
-			country: { type: String },
+			address: { type: String, required: true, trim: true },
+			city: { type: String, required: true, trim: true },
+			state: { type: String, required: true, trim: true },
+			country: { type: String, required: true, trim: true },
+			zipCode: { type: String, trim: true },
 		},
 		status: { type: String, enum: ['Live', 'Archive'], default: 'Live' },
 	},
 	{ timestamps: true }
 );
-
 export const Parent = mongoose.model<IParent>('Parent', parentSchema);

@@ -25,24 +25,39 @@ export interface IStudent extends Document {
 
 const studentSchema = new Schema<IStudent>(
 	{
-		name: { type: String, required: true },
-		mobile: { type: String },
-		email: { type: String },
+		name: { type: String, required: true, trim: true },
+		mobile: { type: String, trim: true, index: true }, // Indexed for faster lookup
+		email: { type: String, trim: true, unique: true, sparse: true }, // Ensures uniqueness
 		residentialAddress: {
-			address: { type: String },
-			city: { type: String },
-			state: { type: String },
-			country: { type: String },
+			address: { type: String, required: true },
+			city: { type: String, required: true },
+			state: { type: String, required: true },
+			country: { type: String, required: true },
+			zipCode: { type: String },
 		},
-		parentId: { type: Schema.Types.ObjectId, ref: 'Parent' },
-		gradeId: { type: Schema.Types.ObjectId, ref: 'Grade' },
-		subjects: [
-			{
-				subjectId: { type: Schema.Types.ObjectId, ref: 'Subject' },
-				teacherId: { type: Schema.Types.ObjectId, ref: 'Teacher' },
-				status: { type: String, enum: ['Live', 'Archive'], default: 'Live' },
-			},
-		],
+		parentId: { type: Schema.Types.ObjectId, ref: 'Parent', required: true },
+		gradeId: { type: Schema.Types.ObjectId, ref: 'Grade', required: true },
+		subjects: {
+			type: [
+				{
+					subjectId: {
+						type: Schema.Types.ObjectId,
+						ref: 'Subject',
+						required: true,
+					},
+					teacherId: {
+						type: Schema.Types.ObjectId,
+						ref: 'Teacher',
+						required: true,
+					},
+					status: { type: String, enum: ['Live', 'Archive'], default: 'Live' },
+				},
+			],
+			validate: [
+				(arr: any[]) => arr.length > 0,
+				'Student must be assigned at least one subject',
+			],
+		},
 		status: { type: String, enum: ['Live', 'Archive'], default: 'Live' },
 	},
 	{ timestamps: true }

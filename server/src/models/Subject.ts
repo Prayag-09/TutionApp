@@ -8,7 +8,7 @@ export interface ISubject extends Document {
 
 const subjectSchema = new Schema<ISubject>(
 	{
-		name: { type: String, required: true, trim: true },
+		name: { type: String, required: true, trim: true, unique: true },
 		description: { type: String, trim: true },
 		status: { type: String, enum: ['Live', 'Archive'], default: 'Live' },
 	},

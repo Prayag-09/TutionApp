@@ -20,23 +20,40 @@ export interface ITeacher extends Document {
 
 const teacherSchema = new Schema<ITeacher>(
 	{
-		name: { type: String, required: true },
-		mobile: { type: String, required: true },
-		email: { type: String, required: true },
+		name: { type: String, required: true, trim: true },
+		mobile: {
+			type: String,
+			required: true,
+			unique: true, // Enforces uniqueness
+			match: /^[0-9]{10}$/, // Ensures a 10-digit mobile number
+		},
+		email: {
+			type: String,
+			required: true,
+			unique: true, // Enforces uniqueness
+			lowercase: true,
+			trim: true,
+			match: /^[\w-\\.]+@([\w-]+\.)+[\w-]{2,4}$/, // Ensures proper email format
+		},
 		residentialAddress: {
-			address: { type: String },
-			city: { type: String },
-			state: { type: String },
-			country: { type: String },
+			address: { type: String, required: true },
+			city: { type: String, required: true },
+			state: { type: String, required: true },
+			country: { type: String, required: true },
 			zipCode: { type: String },
 		},
-		qualification: { type: String },
+		qualification: { type: String, trim: true },
 		status: { type: String, enum: ['Live', 'Archive'], default: 'Live' },
 		gradeSubjects: [
-			{ gradeSubjectId: { type: Schema.Types.ObjectId, ref: 'GradeSubject' } },
+			{
+				gradeSubjectId: {
+					type: Schema.Types.ObjectId,
+					ref: 'GradeSubject',
+					required: true,
+				},
+			},
 		],
 	},
 	{ timestamps: true }
 );
-
 export const Teacher = mongoose.model<ITeacher>('Teacher', teacherSchema);
