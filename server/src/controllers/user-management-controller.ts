@@ -5,6 +5,10 @@ import {
 	getAllTeachersService,
 	getAllStudentsService,
 	getAllParentsService,
+	updateTeacherService,
+	updateStudentService,
+	updateParentService
+
 } from '../services/user-management-services';
 
 /**
@@ -70,6 +74,33 @@ export const getAllStudents = async () => {
 /**
  * Get all parents
  */
+export const editTeacher = async (teacherData: any) => {
+	try {
+		const updatedTeacher = await updateTeacherService(teacherData.teacherId, teacherData);
+		return { success: true, data: updatedTeacher };
+	} catch (error: any) {
+		return { success: false, error: error.message };
+	}
+};
+
+export const editStudent = async (studentData: any) => {
+	try {
+		const updatedStudent = await updateStudentService(studentData.studentId, studentData);
+		return { success: true, data: updatedStudent };
+	} catch (error: any) {
+		return { success: false, error: error.message };
+	}
+};
+
+export const editParent = async (parentData: any) => {
+	try {
+		const updatedParent = await updateParentService(parentData.parentId, parentData);
+		return { success: true, data: updatedParent };
+	} catch (error: any) {
+		return { success: false, error: error.message };
+	}
+};
+
 export const getAllParents = async () => {
 	try {
 		const parents = await getAllParentsService();

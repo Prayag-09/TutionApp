@@ -4,36 +4,67 @@ import { Teacher } from '../models/Teacher';
 import { Student } from '../models/Student';
 import { Parent } from '../models/Parent';
 
+interface RegisterUserData {
+	email: string;
+	password: string;
+}
+
+interface RegisterTeacherData extends RegisterUserData {
+	teacherName: string;
+	mobileNumber: string;
+	residentialAddress: string;
+	qualification: string;
+	status: string;
+	gradeSubjects: string[];
+}
+
+interface RegisterStudentData extends RegisterUserData {
+	name: string;
+	mobile: string;
+	residentialAddress: string;
+	parentId: string;
+	gradeId: string;
+	subjects: string[];
+	status: string;
+}
+
+interface RegisterParentData extends RegisterUserData {
+	name: string;
+	mobile: string;
+	residentialAddress: string;
+	status: string;
+}
+
 /**
  * Register a new Teacher
  */
-export const registerTeacherService = async (teacherData: any) => {
+export const registerTeacherService = async (
+	teacherData: RegisterTeacherData
+) => {
 	try {
-		// Check for duplicate email
 		if (await User.exists({ email: teacherData.email })) {
 			throw new Error('Email already in use');
 		}
 
-		// Hash password
 		const hashedPassword = await bcrypt.hash(teacherData.password, 10);
 
-		// Create User record
-		const user = await new User({
-			email: teacherData.email,
-			password: hashedPassword,
-			role: 'teacher',
-		}).save();
+		const [user, teacher] = await Promise.all([
+			new User({
+				email: teacherData.email,
+				password: hashedPassword,
+				role: 'teacher',
+			}).save(),
 
-		// Create Teacher record
-		const teacher = await new Teacher({
-			...teacherData,
-			email: user.email,
-		}).save();
+			new Teacher({
+				...teacherData,
+				password: undefined,
+			}).save(),
+		]);
 
 		return teacher;
 	} catch (error) {
 		throw new Error(
-			error instanceof Error ? error.message : 'An unknown error occurred'
+			error instanceof Error ? error.message : 'Failed to register teacher'
 		);
 	}
 };
@@ -41,7 +72,9 @@ export const registerTeacherService = async (teacherData: any) => {
 /**
  * Register a new Student
  */
-export const registerStudentService = async (studentData: any) => {
+export const registerStudentService = async (
+	studentData: RegisterStudentData
+) => {
 	try {
 		if (await User.exists({ email: studentData.email })) {
 			throw new Error('Email already in use');
@@ -49,21 +82,23 @@ export const registerStudentService = async (studentData: any) => {
 
 		const hashedPassword = await bcrypt.hash(studentData.password, 10);
 
-		const user = await new User({
-			email: studentData.email,
-			password: hashedPassword,
-			role: 'student',
-		}).save();
+		const [user, student] = await Promise.all([
+			new User({
+				email: studentData.email,
+				password: hashedPassword,
+				role: 'student',
+			}).save(),
 
-		const student = await new Student({
-			...studentData,
-			email: user.email,
-		}).save();
+			new Student({
+				...studentData,
+				password: undefined,
+			}).save(),
+		]);
 
 		return student;
 	} catch (error) {
 		throw new Error(
-			error instanceof Error ? error.message : 'An unknown error occurred'
+			error instanceof Error ? error.message : 'Failed to register student'
 		);
 	}
 };
@@ -71,29 +106,35 @@ export const registerStudentService = async (studentData: any) => {
 /**
  * Register a new Parent
  */
-export const registerParentService = async (parentData: any) => {
+export const registerParentService = async (parentData: RegisterParentData) => {
 	try {
 		if (await User.exists({ email: parentData.email })) {
 			throw new Error('Email already in use');
 		}
 
+		if (!parentData.password) {
+			throw new Error('Password is required');
+		}
+
 		const hashedPassword = await bcrypt.hash(parentData.password, 10);
 
-		const user = await new User({
-			email: parentData.email,
-			password: hashedPassword,
-			role: 'parent',
-		}).save();
+		const [user, parent] = await Promise.all([
+			new User({
+				email: parentData.email,
+				password: hashedPassword,
+				role: 'parent',
+			}).save(),
 
-		const parent = await new Parent({
-			...parentData,
-			email: user.email,
-		}).save();
+			new Parent({
+				...parentData,
+				password: undefined,
+			}).save(),
+		]);
 
 		return parent;
 	} catch (error) {
 		throw new Error(
-			error instanceof Error ? error.message : 'An unknown error occurred'
+			error instanceof Error ? error.message : 'Failed to register parent'
 		);
 	}
 };
@@ -103,9 +144,12 @@ export const registerParentService = async (parentData: any) => {
  */
 export const getAllTeachersService = async () => {
 	try {
-		return await Teacher.find().select('-password');
+		const teachers = await Teacher.find().select('-password');
+		return teachers;
 	} catch (error) {
-		throw new Error('Failed to retrieve teachers');
+		throw new Error(
+			error instanceof Error ? error.message : 'Failed to retrieve teachers'
+		);
 	}
 };
 
@@ -114,9 +158,12 @@ export const getAllTeachersService = async () => {
  */
 export const getAllStudentsService = async () => {
 	try {
-		return await Student.find().select('-password');
+		const students = await Student.find().select('-password');
+		return students;
 	} catch (error) {
-		throw new Error('Failed to retrieve students');
+		throw new Error(
+			error instanceof Error ? error.message : 'Failed to retrieve students'
+		);
 	}
 };
 
@@ -125,8 +172,105 @@ export const getAllStudentsService = async () => {
  */
 export const getAllParentsService = async () => {
 	try {
-		return await Parent.find().select('-password');
+		const parents = await Parent.find().select('-password');
+		return parents;
 	} catch (error) {
-		throw new Error('Failed to retrieve parents');
+		throw new Error(
+			error instanceof Error ? error.message : 'Failed to retrieve parents'
+		);
+	}
+};
+
+/**
+ * Utility function to remove undefined fields from an object
+ */
+const removeUndefinedFields = (obj: Record<string, any>) => {
+	return Object.fromEntries(
+		Object.entries(obj).filter(([_, value]) => value !== undefined)
+	);
+};
+
+/**
+ * Update Teacher
+ */
+export const updateTeacherService = async (
+	teacherId: string,
+	teacherData: Partial<RegisterTeacherData>
+) => {
+	try {
+		const filteredData = removeUndefinedFields(teacherData);
+		const updatedTeacher = await Teacher.findOneAndUpdate(
+			{ _id: teacherId },
+			{ $set: filteredData },
+			{ new: true, runValidators: true }
+		);
+
+		if (!updatedTeacher) {
+			throw new Error('Teacher not found');
+		}
+
+		return updatedTeacher;
+	} catch (error) {
+		throw new Error(
+			error instanceof Error
+				? error.message
+				: 'Failed to update teacher details'
+		);
+	}
+};
+
+/**
+ * Update Student
+ */
+export const updateStudentService = async (
+	studentId: string,
+	studentData: Partial<RegisterStudentData>
+) => {
+	try {
+		const filteredData = removeUndefinedFields(studentData);
+		const updatedStudent = await Student.findOneAndUpdate(
+			{ _id: studentId },
+			{ $set: filteredData },
+			{ new: true, runValidators: true }
+		);
+
+		if (!updatedStudent) {
+			throw new Error('Student not found');
+		}
+
+		return updatedStudent;
+	} catch (error) {
+		throw new Error(
+			error instanceof Error
+				? error.message
+				: 'Failed to update student details'
+		);
+	}
+};
+
+/**
+ * Update Parent
+ */
+export const updateParentService = async (
+	parentId: string,
+	parentData: Partial<RegisterParentData>
+) => {
+	try {
+		const filteredData = removeUndefinedFields(parentData);
+		const updatedParent = await Parent.findOneAndUpdate(
+			{ _id: parentId },
+			{ $set: filteredData },
+			{ new: true, runValidators: true }
+		);
+
+		if (!updatedParent) {
+			throw new Error('Parent not found');
+		}
+
+		return updatedParent;
+	} catch (error) {
+		throw new Error(
+			error instanceof Error ? error.message : 'Failed to update parent details'
+		);
 	}
 };
