@@ -1,279 +1,193 @@
-import { Request, Response } from 'express';
-import { StudentSubject } from '../models/StudentSubject';
-import { Grade } from '../models/Grade';
-import { GradeSubject } from '../models/GradeSubject';
-import { Subject } from '../models/Subject';
-import { Attendance } from '../models/Attendance';
+import {
+	addGradeService,
+	getAllGradesService,
+	updateGradeStatusService,
+	addGradeSubjectService,
+	getAllGradeSubjectsService,
+	updateGradeSubjectStatusService,
+	addSubjectService,
+	getAllSubjectsService,
+	updateSubjectStatusService,
+	addStudentSubjectService,
+	getAllStudentSubjectsService,
+	updateStudentSubjectStatusService,
+	recordAttendanceService,
+	getAllAttendanceService,
+	updateAttendanceStatusService,
+} from '../services/tution-services';
 
-// Grade
-
+/* ---------- Grades ---------- */
 // Add new grade (POST)
-export const addGrade = async (req: Request, res: Response) => {
+export const addGrade = async (gradeData: any) => {
 	try {
-		const { name, description } = req.body;
-		const newGrade = new Grade({ name, description, status: 'Live' });
-		await newGrade.save();
-
-		res.status(201).json({ message: 'Grade added successfully' });
-	} catch (error) {
-		res.status(500).json({ error: 'Error adding grade' });
+		const newGrade = await addGradeService(gradeData);
+		return { success: true, data: newGrade };
+	} catch (error: any) {
+		return { success: false, data: error.message };
 	}
 };
 
 // Get all grades (GET)
-export const getAllGrades = async (_req: Request, res: Response) => {
+export const getAllGrades = async () => {
 	try {
-		const grades = await Grade.find();
-		res.json(grades);
-	} catch (error) {
-		res.status(500).json({ error: 'Error fetching grades' });
+		const grades = await getAllGradesService();
+		return { success: true, data: grades };
+	} catch (error: any) {
+		return { success: false, data: error.message };
 	}
 };
 
-// Edit grade status (Live / Archived) (EDIT)
-export const updateGradeStatus = async (req: Request, res: Response) => {
+// Update grade status (PUT)
+export const updateGradeStatus = async (gradeId: any, status: string) => {
 	try {
-		const { gradeId } = req.params;
-		const { status } = req.body;
-
-		if (!['Live', 'Archived'].includes(status)) {
-			return res.status(400).json({ error: 'Invalid status' });
-		}
-
-		const grade = await Grade.findByIdAndUpdate(
-			gradeId,
-			{ status },
-			{ new: true }
-		);
-		if (!grade) return res.status(404).json({ error: 'Grade not found' });
-
-		res.json({ message: `Grade status updated to ${status}`, grade });
-	} catch (error) {
-		res.status(500).json({ error: 'Error updating grade status' });
+		const updatedGrade = await updateGradeStatusService(gradeId, status);
+		return { success: true, data: updatedGrade };
+	} catch (error: any) {
+		return { success: false, data: error.message };
 	}
 };
 
-// Grade Subjects
-
-// Add new grade-subject relation (POST)
-export const addGradeSubject = async (req: Request, res: Response) => {
+/* ---------- Grade-Subject ---------- */
+// Add new grade-subject (POST)
+export const addGradeSubject = async (data: any) => {
 	try {
-		const { gradeId, subjectId, teacherId } = req.body;
-		const newGradeSubject = new GradeSubject({
-			gradeId,
-			subjectId,
-			teacherId,
-			status: 'Live',
-		});
-		await newGradeSubject.save();
-
-		res
-			.status(201)
-			.json({ message: 'Grade-Subject relation added successfully' });
-	} catch (error) {
-		res.status(500).json({ error: 'Error adding grade-subject relation' });
+		const newRelation = await addGradeSubjectService(data);
+		return { success: true, data: newRelation };
+	} catch (error: any) {
+		return { success: false, data: error.message };
 	}
 };
 
 // Get all grade-subject relations (GET)
-export const getAllGradeSubjects = async (_req: Request, res: Response) => {
+export const getAllGradeSubjects = async () => {
 	try {
-		const gradeSubjects = await GradeSubject.find();
-		res.json(gradeSubjects);
-	} catch (error) {
-		res.status(500).json({ error: 'Error fetching grade-subject relations' });
+		const gradeSubjects = await getAllGradeSubjectsService();
+		return { success: true, data: gradeSubjects };
+	} catch (error: any) {
+		return { success: false, data: error.message };
 	}
 };
 
-// Edit grade-subject relation status (Live / Archived) (EDIT)
-export const updateGradeSubjectStatus = async (req: Request, res: Response) => {
+// Update grade-subject status (PUT)
+export const updateGradeSubjectStatus = async (
+	gradeSubjectId: any,
+	status: string
+) => {
 	try {
-		const { gradeSubjectId } = req.params;
-		const { status } = req.body;
-
-		if (!['Live', 'Archived'].includes(status)) {
-			return res.status(400).json({ error: 'Invalid status' });
-		}
-
-		const gradeSubject = await GradeSubject.findByIdAndUpdate(
+		const updatedRelation = await updateGradeSubjectStatusService(
 			gradeSubjectId,
-			{ status },
-			{ new: true }
+			status
 		);
-		if (!gradeSubject)
-			return res
-				.status(404)
-				.json({ error: 'Grade-Subject relation not found' });
-
-		res.json({
-			message: `Grade-Subject status updated to ${status}`,
-			gradeSubject,
-		});
-	} catch (error) {
-		res
-			.status(500)
-			.json({ error: 'Error updating grade-subject relation status' });
+		return { success: true, data: updatedRelation };
+	} catch (error: any) {
+		return { success: false, data: error.message };
 	}
 };
 
-// Subjects
-
+/* ---------- Subjects ---------- */
 // Add new subject (POST)
-export const addSubject = async (req: Request, res: Response) => {
+export const addSubject = async (data: any) => {
 	try {
-		const { name, description } = req.body;
-		const newSubject = new Subject({ name, description, status: 'Live' });
-		await newSubject.save();
-
-		res.status(201).json({ message: 'Subject added successfully' });
-	} catch (error) {
-		res.status(500).json({ error: 'Error adding subject' });
+		const newSubject = await addSubjectService(data);
+		return { success: true, data: newSubject };
+	} catch (error: any) {
+		return { success: false, data: error.message };
 	}
 };
 
 // Get all subjects (GET)
-export const getAllSubjects = async (_req: Request, res: Response) => {
+export const getAllSubjects = async () => {
 	try {
-		const subjects = await Subject.find();
-		res.json(subjects);
-	} catch (error) {
-		res.status(500).json({ error: 'Error fetching subjects' });
+		const subjects = await getAllSubjectsService();
+		return { success: true, data: subjects };
+	} catch (error: any) {
+		return { success: false, data: error.message };
 	}
 };
 
-// Edit subject status (Live / Archived) (EDIT)
-export const updateSubjectStatus = async (req: Request, res: Response) => {
+// Update subject status (PUT)
+export const updateSubjectStatus = async (
+	subjectId: any,
+	status: string
+) => {
 	try {
-		const { subjectId } = req.params;
-		const { status } = req.body;
-
-		if (!['Live', 'Archived'].includes(status)) {
-			return res.status(400).json({ error: 'Invalid status' });
-		}
-
-		const subject = await Subject.findByIdAndUpdate(
-			subjectId,
-			{ status },
-			{ new: true }
-		);
-		if (!subject) return res.status(404).json({ error: 'Subject not found' });
-
-		res.json({ message: `Subject status updated to ${status}`, subject });
-	} catch (error) {
-		res.status(500).json({ error: 'Error updating subject status' });
+		const updatedSubject = await updateSubjectStatusService(subjectId, status);
+		return { success: true, data: updatedSubject };
+	} catch (error: any) {
+		return { success: false, data: error.message };
 	}
 };
 
-// Student Subjects
-
-// Add new student-subject relation (POST)
-export const addStudentSubject = async (req: Request, res: Response) => {
+/* ---------- Student-Subject ---------- */
+// Add new student-subject (POST)
+export const addStudentSubject = async (data: any) => {
 	try {
-		const { studentId, subjectId } = req.body;
-		const newStudentSubject = new StudentSubject({
-			studentId,
-			subjectId,
-			status: 'Live',
-		});
-		await newStudentSubject.save();
-
-		res
-			.status(201)
-			.json({ message: 'Student-Subject relation added successfully' });
-	} catch (error) {
-		res.status(500).json({ error: 'Error adding student-subject relation' });
+		const newRelation = await addStudentSubjectService(data);
+		return { success: true, data: newRelation };
+	} catch (error: any) {
+		return { success: false, data: error.message };
 	}
 };
 
 // Get all student-subject relations (GET)
-export const getAllStudentSubjects = async (_req: Request, res: Response) => {
+export const getAllStudentSubjects = async () => {
 	try {
-		const studentSubjects = await StudentSubject.find();
-		res.json(studentSubjects);
-	} catch (error) {
-		res.status(500).json({ error: 'Error fetching student-subject relations' });
+		const studentSubjects = await getAllStudentSubjectsService();
+		return { success: true, data: studentSubjects };
+	} catch (error: any) {
+		return { success: false, data: error.message };
 	}
 };
 
-// Edit student-subject relation status (Live / Archived) (EDIT)
+// Update student-subject status (PUT)
 export const updateStudentSubjectStatus = async (
-	req: Request,
-	res: Response
+	studentSubjectId: any,
+	status: string
 ) => {
 	try {
-		const { studentSubjectId } = req.params;
-		const { status } = req.body;
-
-		if (!['Live', 'Archived'].includes(status)) {
-			return res.status(400).json({ error: 'Invalid status' });
-		}
-
-		const studentSubject = await StudentSubject.findByIdAndUpdate(
+		const updatedRelation = await updateStudentSubjectStatusService(
 			studentSubjectId,
-			{ status },
-			{ new: true }
+			status
 		);
-		if (!studentSubject)
-			return res
-				.status(404)
-				.json({ error: 'Student-Subject relation not found' });
-
-		res.json({
-			message: `Student-Subject status updated to ${status}`,
-			studentSubject,
-		});
-	} catch (error) {
-		res
-			.status(500)
-			.json({ error: 'Error updating student-subject relation status' });
+		return { success: true, data: updatedRelation };
+	} catch (error: any) {
+		return { success: false, data: error.message };
 	}
 };
 
-// Students Attendance
-
+/* ---------- Attendance ---------- */
 // Record attendance (POST)
-export const recordAttendance = async (req: Request, res: Response) => {
+export const recordAttendance = async (data: any) => {
 	try {
-		const { studentId, date, status } = req.body;
-		const newAttendance = new Attendance({ studentId, date, status: 'Live' });
-		await newAttendance.save();
-
-		res.status(201).json({ message: 'Attendance recorded successfully' });
-	} catch (error) {
-		res.status(500).json({ error: 'Error recording attendance' });
+		const newAttendance = await recordAttendanceService(data);
+		return { success: true, data: newAttendance };
+	} catch (error: any) {
+		return { success: false, data: error.message };
 	}
 };
 
 // Get all attendance records (GET)
-export const getAllAttendance = async (_req: Request, res: Response) => {
+export const getAllAttendance = async () => {
 	try {
-		const attendanceRecords = await Attendance.find();
-		res.json(attendanceRecords);
-	} catch (error) {
-		res.status(500).json({ error: 'Error fetching attendance records' });
+		const attendanceRecords = await getAllAttendanceService();
+		return { success: true, data: attendanceRecords };
+	} catch (error: any) {
+		return { success: false, data: error.message };
 	}
 };
 
-// Edit attendance status (Live / Archived) (EDIT)
-export const updateAttendanceStatus = async (req: Request, res: Response) => {
+// Update attendance status (PUT)
+export const updateAttendanceStatus = async (
+	attendanceId: any,
+	status: string
+) => {
 	try {
-		const { attendanceId } = req.params;
-		const { status } = req.body;
-
-		if (!['Live', 'Archived'].includes(status)) {
-			return res.status(400).json({ error: 'Invalid status' });
-		}
-
-		const attendance = await Attendance.findByIdAndUpdate(
+		const updatedAttendance = await updateAttendanceStatusService(
 			attendanceId,
-			{ status },
-			{ new: true }
+			status
 		);
-		if (!attendance)
-			return res.status(404).json({ error: 'Attendance record not found' });
-
-		res.json({ message: `Attendance status updated to ${status}`, attendance });
-	} catch (error) {
-		res.status(500).json({ error: 'Error updating attendance status' });
+		return { success: true, data: updatedAttendance };
+	} catch (error: any) {
+		return { success: false, data: error.message };
 	}
 };
