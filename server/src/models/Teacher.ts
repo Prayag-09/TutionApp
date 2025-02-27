@@ -24,16 +24,16 @@ const teacherSchema = new Schema<ITeacher>(
 		mobile: {
 			type: String,
 			required: true,
-			unique: true, // Enforces uniqueness
-			match: /^[0-9]{10}$/, // Ensures a 10-digit mobile number
+			unique: true,
+			match: /^[0-9]{10}$/,
 		},
 		email: {
 			type: String,
 			required: true,
-			unique: true, // Enforces uniqueness
+			unique: true,
 			lowercase: true,
 			trim: true,
-			match: /^[\w-\\.]+@([\w-]+\.)+[\w-]{2,4}$/, // Ensures proper email format
+			match: /^[\w-\\.]+@([\w-]+\.)+[\w-]{2,4}$/,
 		},
 		residentialAddress: {
 			address: { type: String, required: true },
