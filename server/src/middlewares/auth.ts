@@ -17,7 +17,6 @@ export const authenticate = (
 	}
 
 	const token = authHeader.split(' ')[1];
-
 	try {
 		const decoded = jwt.verify(
 			token,
@@ -38,12 +37,10 @@ export const authorize = (roles: string[]) => {
 			res.status(401).json({ error: 'Unauthorized: Please log in' });
 			return;
 		}
-
 		if (typeof req.user === 'string' || !roles.includes(req.user.role)) {
 			res.status(403).json({ error: 'Forbidden: Access Denied' });
 			return;
 		}
-
 		next();
 	};
 };

@@ -26,8 +26,8 @@ export interface IStudent extends Document {
 const studentSchema = new Schema<IStudent>(
 	{
 		name: { type: String, required: true, trim: true },
-		mobile: { type: String, trim: true, index: true }, // Indexed for faster lookup
-		email: { type: String, trim: true, unique: true, sparse: true }, // Ensures uniqueness
+		mobile: { type: String, trim: true, index: true },
+		email: { type: String, trim: true, unique: true, sparse: true },
 		residentialAddress: {
 			address: { type: String, required: true },
 			city: { type: String, required: true },
