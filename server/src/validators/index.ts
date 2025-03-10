@@ -1,9 +1,5 @@
 import { z } from 'zod';
 
-const dateSchema = z
-	.string()
-	.refine((val) => !isNaN(Date.parse(val)), { message: 'Invalid date format' });
-
 const statusEnum = z.enum(['Live', 'Archive']);
 const userRoleEnum = z.enum(['principal', 'teacher', 'student', 'parent']);
 
@@ -83,9 +79,26 @@ export const userValidator = z.object({
 
 export const feeValidator = z.object({
 	feeName: z.string().min(1, 'Fee name is required').trim(),
+	gradeId: z.string().min(1, 'Grade is required'),
+	subjectId: z.string().min(1, 'Subject is required'),
+	teacherId: z.string().min(1, 'Teacher is required'),
 	amount: z.number().positive('Amount must be positive'),
-	dueDate: dateSchema,
-	description: z.string().optional(),
+});
+
+const dateSchema = z
+	.string()
+	.refine((val) => !isNaN(Date.parse(val)), { message: 'Invalid date format' });
+
+const paymentMethodEnum = z.enum(['Cash', 'Online', 'Bank Transfer']);
+
+export const feeRemittanceValidator = z.object({
+	studentId: z.string().min(1, 'Student ID is required'),
+	feeId: z.string().min(1, 'Fee ID is required'),
+	parentId: z.string().min(1, 'Parent ID is required'),
+	amountPaid: z.number().positive('Amount paid must be a positive number'),
+	paymentDate: dateSchema.optional(),
+	paymentMethod: paymentMethodEnum,
+	receiptNumber: z.string().min(1, 'Receipt number is required').trim(),
 });
 
 export const gradeSubjectValidator = z.object({

@@ -18,6 +18,12 @@ const handleServiceError = (error: any, message: string) => {
 /* ---------- Grades ---------- */
 export const addGradeService = async (data: { name: string }) => {
 	try {
+		// Check if the grade already exists
+		const existingGrade = await Grade.findOne({ name: data.name });
+		if (existingGrade) {
+			throw new Error('Grade already exists');
+		}
+
 		const grade = await Grade.create(data);
 		return { success: true, data: grade };
 	} catch (error) {
@@ -57,6 +63,11 @@ export const addGradeSubjectService = async (data: {
 	subjectId: Types.ObjectId;
 }) => {
 	try {
+		const existingRelation = await GradeSubject.findOne(data);
+		if (existingRelation) {
+			throw new Error('This subject is already assigned to the grade');
+		}
+
 		const gradeSubject = await GradeSubject.create(data);
 		return { success: true, data: gradeSubject };
 	} catch (error) {
@@ -95,6 +106,11 @@ export const updateGradeSubjectStatusService = async (
 /* ---------- Subjects ---------- */
 export const addSubjectService = async (data: { name: string }) => {
 	try {
+		const existingSubject = await Subject.findOne({ name: data.name });
+		if (existingSubject) {
+			throw new Error('Subject already exists');
+		}
+
 		const subject = await Subject.create(data);
 		return { success: true, data: subject };
 	} catch (error) {
@@ -134,6 +150,11 @@ export const addStudentSubjectService = async (data: {
 	subjectId: Types.ObjectId;
 }) => {
 	try {
+		const existingRelation = await StudentSubject.findOne(data);
+		if (existingRelation) {
+			throw new Error('Student is already enrolled in this subject');
+		}
+
 		const studentSubject = await StudentSubject.create(data);
 		return { success: true, data: studentSubject };
 	} catch (error) {
@@ -179,6 +200,16 @@ export const recordAttendanceService = async (data: {
 	date: Date;
 }) => {
 	try {
+		const existingAttendance = await Attendance.findOne({
+			studentId: data.studentId,
+			date: data.date,
+		});
+		if (existingAttendance) {
+			throw new Error(
+				'Attendance for this student on this date already exists'
+			);
+		}
+
 		const attendance = await Attendance.create(data);
 		return { success: true, data: attendance };
 	} catch (error) {
