@@ -83,6 +83,7 @@ export const feeValidator = z.object({
 	subjectId: z.string().min(1, 'Subject is required'),
 	teacherId: z.string().min(1, 'Teacher is required'),
 	amount: z.number().positive('Amount must be positive'),
+	status: z.enum(['pending', 'paid', 'canceled']).optional(),
 });
 
 const dateSchema = z

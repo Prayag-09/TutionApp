@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import asyncHandler from 'express-async-handler';
 import { authenticate, authorize } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
 import {
@@ -11,24 +12,16 @@ import {
 	editTeacher,
 	editStudent,
 	editParent,
+	updateUserStatusController,
 } from '../controllers/user-management-controller';
 import {
 	parentValidator,
 	studentValidator,
 	teacherValidator,
 } from '../validators';
+import { updateUserStatusService } from '../services/user-management-services';
 
 const router = express.Router();
-
-// Utility function for error responses
-const handleErrorResponse = (res: Response, error: any, message: string) => {
-	console.error(error);
-	res.status(error?.statusCode || 500).json({
-		success: false,
-		error: error?.message || message,
-		details: error?.details || [],
-	});
-};
 
 // Register Teacher
 router.post(
@@ -36,14 +29,10 @@ router.post(
 	authenticate,
 	authorize(['principal']),
 	validate(teacherValidator),
-	async (req: Request, res: Response) => {
-		try {
-			const teacher = await registerTeacher(req.body);
-			res.status(201).json({ success: true, data: teacher });
-		} catch (error) {
-			handleErrorResponse(res, error, 'Unable to register teacher');
-		}
-	}
+	asyncHandler(async (req: Request, res: Response) => {
+		const teacher = await registerTeacher(req.body);
+		res.status(201).json({ success: true, data: teacher });
+	})
 );
 
 // Register Parent
@@ -52,14 +41,10 @@ router.post(
 	authenticate,
 	authorize(['principal', 'teacher']),
 	validate(parentValidator),
-	async (req: Request, res: Response) => {
-		try {
-			const parent = await registerParent(req.body);
-			res.status(201).json({ success: true, data: parent });
-		} catch (error) {
-			handleErrorResponse(res, error, 'Unable to register parent');
-		}
-	}
+	asyncHandler(async (req: Request, res: Response) => {
+		const parent = await registerParent(req.body);
+		res.status(201).json({ success: true, data: parent });
+	})
 );
 
 // Register Student
@@ -68,14 +53,10 @@ router.post(
 	authenticate,
 	authorize(['principal', 'teacher']),
 	validate(studentValidator),
-	async (req: Request, res: Response) => {
-		try {
-			const student = await registerStudent(req.body);
-			res.status(201).json({ success: true, data: student });
-		} catch (error) {
-			handleErrorResponse(res, error, 'Unable to register student');
-		}
-	}
+	asyncHandler(async (req: Request, res: Response) => {
+		const student = await registerStudent(req.body);
+		res.status(201).json({ success: true, data: student });
+	})
 );
 
 // Get All Parents
@@ -83,14 +64,10 @@ router.get(
 	'/parents',
 	authenticate,
 	authorize(['principal']),
-	async (_req: Request, res: Response) => {
-		try {
-			const parents = await getAllParents();
-			res.status(200).json({ success: true, data: parents });
-		} catch (error) {
-			handleErrorResponse(res, error, 'Unable to retrieve parents');
-		}
-	}
+	asyncHandler(async (_req: Request, res: Response) => {
+		const parents = await getAllParents();
+		res.status(200).json({ success: true, data: parents });
+	})
 );
 
 // Get All Students
@@ -98,14 +75,10 @@ router.get(
 	'/students',
 	authenticate,
 	authorize(['principal', 'teacher']),
-	async (_req: Request, res: Response) => {
-		try {
-			const students = await getAllStudents();
-			res.status(200).json({ success: true, data: students });
-		} catch (error) {
-			handleErrorResponse(res, error, 'Unable to retrieve students');
-		}
-	}
+	asyncHandler(async (_req: Request, res: Response) => {
+		const students = await getAllStudents();
+		res.status(200).json({ success: true, data: students });
+	})
 );
 
 // Get All Teachers
@@ -113,14 +86,10 @@ router.get(
 	'/teachers',
 	authenticate,
 	authorize(['principal']),
-	async (_req: Request, res: Response) => {
-		try {
-			const teachers = await getAllTeachers();
-			res.status(200).json({ success: true, data: teachers });
-		} catch (error) {
-			handleErrorResponse(res, error, 'Unable to retrieve teachers');
-		}
-	}
+	asyncHandler(async (_req: Request, res: Response) => {
+		const teachers = await getAllTeachers();
+		res.status(200).json({ success: true, data: teachers });
+	})
 );
 
 // Edit Teacher
@@ -128,19 +97,14 @@ router.put(
 	'/edit/teacher',
 	authenticate,
 	authorize(['principal']),
-	async (req: Request, res: Response) => {
-		try {
-			const teacherData = req.body;
-			const updatedTeacher = await editTeacher(teacherData);
-			res.status(200).json({
-				success: true,
-				message: 'Successfully updated the teacher',
-				data: updatedTeacher,
-			});
-		} catch (error) {
-			handleErrorResponse(res, error, 'Unable to update teacher details');
-		}
-	}
+	asyncHandler(async (req: Request, res: Response) => {
+		const updatedTeacher = await editTeacher(req.body);
+		res.status(200).json({
+			success: true,
+			message: 'Successfully updated the teacher',
+			data: updatedTeacher,
+		});
+	})
 );
 
 // Edit Student
@@ -148,19 +112,14 @@ router.put(
 	'/edit/student',
 	authenticate,
 	authorize(['principal', 'teacher']),
-	async (req: Request, res: Response) => {
-		try {
-			const studentData = req.body;
-			const updatedStudent = await editStudent(studentData);
-			res.status(200).json({
-				success: true,
-				message: 'Successfully updated the student',
-				data: updatedStudent,
-			});
-		} catch (error) {
-			handleErrorResponse(res, error, 'Unable to update student details');
-		}
-	}
+	asyncHandler(async (req: Request, res: Response) => {
+		const updatedStudent = await editStudent(req.body);
+		res.status(200).json({
+			success: true,
+			message: 'Successfully updated the student',
+			data: updatedStudent,
+		});
+	})
 );
 
 // Edit Parent
@@ -168,19 +127,81 @@ router.put(
 	'/edit/parent',
 	authenticate,
 	authorize(['principal', 'teacher', 'student']),
-	async (req: Request, res: Response) => {
-		try {
-			const parentData = req.body;
-			const updatedParent = await editParent(parentData);
-			res.status(200).json({
-				success: true,
-				message: 'Successfully updated the parent',
-				data: updatedParent,
-			});
-		} catch (error) {
-			handleErrorResponse(res, error, 'Unable to update parent details');
-		}
-	}
+	asyncHandler(async (req: Request, res: Response) => {
+		const updatedParent = await editParent(req.body);
+		res.status(200).json({
+			success: true,
+			message: 'Successfully updated the parent',
+			data: updatedParent,
+		});
+	})
+);
+
+// Update Teacher Status
+router.put(
+	'/teacher/:id/status',
+	authenticate,
+	authorize(['principal']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const { id } = req.params;
+		const { status } = req.body;
+
+		const updatedTeacher = await updateUserStatusController(
+			id,
+			'teacher',
+			status
+		);
+		res.status(200).json({
+			success: true,
+			message: `Teacher successfully marked as ${status}`,
+			data: updatedTeacher,
+		});
+	})
+);
+
+// Update Student Status
+router.put(
+	'/student/:id/status',
+	authenticate,
+	authorize(['principal', 'teacher']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const { id } = req.params;
+		const { status } = req.body;
+
+		const updatedStudent = await updateUserStatusController(
+			id,
+			'student',
+			status
+		);
+		res.status(200).json({
+			success: true,
+			message: `Student successfully marked as ${status}`,
+			data: updatedStudent,
+		});
+	})
+);
+
+// Update Parent Status
+router.put(
+	'/parent/:id/status',
+	authenticate,
+	authorize(['principal', 'teacher']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const { id } = req.params;
+		const { status } = req.body;
+
+		const updatedParent = await updateUserStatusController(
+			id,
+			'parent',
+			status
+		);
+		res.status(200).json({
+			success: true,
+			message: `Parent successfully marked as ${status}`,
+			data: updatedParent,
+		});
+	})
 );
 
 export default router;
+

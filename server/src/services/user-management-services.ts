@@ -274,3 +274,50 @@ export const updateParentService = async (
 		);
 	}
 };
+
+export const updateUserStatusService = async (
+	userId: string,
+	role: 'teacher' | 'student' | 'parent',
+	status: 'Live' | 'Archive'
+) => {
+	try {
+		let model: typeof Teacher | typeof Student | typeof Parent;
+		if (role === 'teacher') model = Teacher as typeof Teacher;
+		else if (role === 'student') model = Student as typeof Student;
+		else if (role === 'parent') model = Parent as typeof Parent;
+		else throw new Error('Invalid role');
+
+		let updatedUser;
+		if (model === Teacher) {
+			updatedUser = await Teacher.findOneAndUpdate(
+				{ _id: userId },
+				{ $set: { status } },
+				{ new: true, runValidators: true }
+			);
+		} else if (model === Student) {
+			updatedUser = await Student.findOneAndUpdate(
+				{ _id: userId },
+				{ $set: { status } },
+				{ new: true, runValidators: true }
+			);
+		} else if (model === Parent) {
+			updatedUser = await Parent.findOneAndUpdate(
+				{ _id: userId },
+				{ $set: { status } },
+				{ new: true, runValidators: true }
+			);
+		}
+
+		if (!updatedUser) {
+			throw new Error(
+				`${role.charAt(0).toUpperCase() + role.slice(1)} not found`
+			);
+		}
+
+		return updatedUser;
+	} catch (error) {
+		throw new Error(
+			error instanceof Error ? error.message : `Failed to update ${role} status`
+		);
+	}
+};

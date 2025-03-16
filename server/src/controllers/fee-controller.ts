@@ -5,8 +5,9 @@ import {
 	fetchAllFeesService,
 	fetchRemittanceByIdService,
 	fetchRemittancesByStudentService,
-	// modifyFeeStatusService,
+	modifyFeeStatusService,
 	deleteFeeRemittanceService,
+	updateFeeService,
 } from '../services/fee-services';
 
 // **Add New Fee**
@@ -29,15 +30,24 @@ export const getAllFeesController = async () => {
 	}
 };
 
-// // **Update Fee Status**
-// export const updateFeeStatusController = async (feeId: any, status: string) => {
-// 	try {
-// 		const updatedFee = await modifyFeeStatusService(feeId, status);
-// 		return { success: true, data: updatedFee };
-// 	} catch (error: any) {
-// 		throw new Error(error.message || 'Error updating fee status');
-// 	}
-// };
+// **Update Fee Status**
+export const updateFeeStatusController = async (feeId: any, status: string) => {
+	try {
+		const updatedFee = await modifyFeeStatusService(feeId, status);
+		return { success: true, data: updatedFee };
+	} catch (error: any) {
+		throw new Error(error.message || 'Error updating fee status');
+	}
+};
+
+export const updateFeeController = async (feeId: string, feeData: any) => {
+	try {
+		const updatedFee = await updateFeeService(feeId, feeData);
+		return { success: true, data: updatedFee };
+	} catch (error: any) {
+		throw new Error(error.message || 'Error updating fee');
+	}
+};
 
 // **Create a new fee remittance (payment)**
 export const createFeeRemittanceController = async (remittanceData: any) => {

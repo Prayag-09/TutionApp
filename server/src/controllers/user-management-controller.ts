@@ -7,8 +7,8 @@ import {
 	getAllParentsService,
 	updateTeacherService,
 	updateStudentService,
-	updateParentService
-
+	updateParentService,
+	updateUserStatusService,
 } from '../services/user-management-services';
 
 /**
@@ -76,7 +76,10 @@ export const getAllStudents = async () => {
  */
 export const editTeacher = async (teacherData: any) => {
 	try {
-		const updatedTeacher = await updateTeacherService(teacherData.teacherId, teacherData);
+		const updatedTeacher = await updateTeacherService(
+			teacherData.teacherId,
+			teacherData
+		);
 		return { success: true, data: updatedTeacher };
 	} catch (error: any) {
 		return { success: false, error: error.message };
@@ -85,7 +88,10 @@ export const editTeacher = async (teacherData: any) => {
 
 export const editStudent = async (studentData: any) => {
 	try {
-		const updatedStudent = await updateStudentService(studentData.studentId, studentData);
+		const updatedStudent = await updateStudentService(
+			studentData.studentId,
+			studentData
+		);
 		return { success: true, data: updatedStudent };
 	} catch (error: any) {
 		return { success: false, error: error.message };
@@ -94,7 +100,10 @@ export const editStudent = async (studentData: any) => {
 
 export const editParent = async (parentData: any) => {
 	try {
-		const updatedParent = await updateParentService(parentData.parentId, parentData);
+		const updatedParent = await updateParentService(
+			parentData.parentId,
+			parentData
+		);
 		return { success: true, data: updatedParent };
 	} catch (error: any) {
 		return { success: false, error: error.message };
@@ -105,6 +114,19 @@ export const getAllParents = async () => {
 	try {
 		const parents = await getAllParentsService();
 		return { success: true, data: parents };
+	} catch (error: any) {
+		return { success: false, error: error.message };
+	}
+};
+
+export const updateUserStatusController = async (
+	userId: string,
+	role: 'teacher' | 'student' | 'parent',
+	status: 'Live' | 'Archive'
+) => {
+	try {
+		const updatedUser = await updateUserStatusService(userId, role, status);
+		return { success: true, data: updatedUser };
 	} catch (error: any) {
 		return { success: false, error: error.message };
 	}
