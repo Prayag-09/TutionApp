@@ -19,7 +19,6 @@ import {
 	studentValidator,
 	teacherValidator,
 } from '../validators';
-import { updateUserStatusService } from '../services/user-management-services';
 
 const router = express.Router();
 

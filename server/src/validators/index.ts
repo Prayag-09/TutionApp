@@ -124,6 +124,7 @@ export const teacherValidator = z.object({
 	name: z.string().min(1, 'Name is required').trim(),
 	mobile: z.string().min(10, 'Mobile number is required').trim(),
 	email: z.string().email('Invalid email format'),
+	password: z.string().min(6, 'Password must be at least 6 characters'),
 	residentialAddress: z.object({
 		address: z.string().min(1, 'Address is required').trim(),
 		city: z.string().min(1, 'City is required').trim(),
@@ -146,6 +147,10 @@ export const studentValidator = z.object({
 	name: z.string().min(1, 'Name is required').trim(),
 	mobile: z.string().trim().optional(),
 	email: z.string().email('Invalid email format').optional(),
+	password: z
+		.string()
+		.min(6, 'Password must be at least 6 characters')
+		.optional(),
 	residentialAddress: z.object({
 		address: z.string().min(1, 'Address is required').trim(),
 		city: z.string().min(1, 'City is required').trim(),
@@ -170,6 +175,10 @@ export const parentValidator = z.object({
 	name: z.string().min(1, 'Name is required').trim(),
 	mobile: z.string().min(10, 'Mobile number is required').trim(),
 	email: z.string().email('Invalid email format').optional(),
+	password: z
+		.string()
+		.min(6, 'Password must be at least 6 characters')
+		.optional(),
 	residentialAddress: z.object({
 		address: z.string().min(1, 'Address is required').trim(),
 		city: z.string().min(1, 'City is required').trim(),
