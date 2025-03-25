@@ -9,6 +9,14 @@ import {
 	updateStudentService,
 	updateParentService,
 	updateUserStatusService,
+	getTeacherByIdService, // New service
+	getStudentByIdService, // New service
+	getParentByIdService, // New service
+	deleteTeacherService, // New service
+	deleteStudentService, // New service
+	deleteParentService, // New service
+	getUserRolesService, // New service
+	updateUserRoleService, // New service
 } from '../services/user-management-services';
 
 /**
@@ -17,9 +25,9 @@ import {
 export const registerTeacher = async (teacherData: any) => {
 	try {
 		const teacher = await registerTeacherService(teacherData);
-		return { success: true, data: teacher };
+		return teacher;
 	} catch (error: any) {
-		return { success: false, error: error.message };
+		throw new Error(error.message);
 	}
 };
 
@@ -29,9 +37,9 @@ export const registerTeacher = async (teacherData: any) => {
 export const registerStudent = async (studentData: any) => {
 	try {
 		const student = await registerStudentService(studentData);
-		return { success: true, data: student };
+		return student;
 	} catch (error: any) {
-		return { success: false, error: error.message };
+		throw new Error(error.message);
 	}
 };
 
@@ -41,9 +49,9 @@ export const registerStudent = async (studentData: any) => {
 export const registerParent = async (parentData: any) => {
 	try {
 		const parent = await registerParentService(parentData);
-		return { success: true, data: parent };
+		return parent;
 	} catch (error: any) {
-		return { success: false, error: error.message };
+		throw new Error(error.message);
 	}
 };
 
@@ -53,9 +61,21 @@ export const registerParent = async (parentData: any) => {
 export const getAllTeachers = async () => {
 	try {
 		const teachers = await getAllTeachersService();
-		return { success: true, data: teachers };
+		return teachers;
 	} catch (error: any) {
-		return { success: false, error: error.message };
+		throw new Error(error.message);
+	}
+};
+
+/**
+ * Get teacher by ID
+ */
+export const getTeacherById = async (teacherId: string) => {
+	try {
+		const teacher = await getTeacherByIdService(teacherId);
+		return teacher;
+	} catch (error: any) {
+		throw new Error(error.message);
 	}
 };
 
@@ -65,14 +85,50 @@ export const getAllTeachers = async () => {
 export const getAllStudents = async () => {
 	try {
 		const students = await getAllStudentsService();
-		return { success: true, data: students };
+		return students;
 	} catch (error: any) {
-		return { success: false, error: error.message };
+		throw new Error(error.message);
+	}
+};
+
+/**
+ * Get student by ID
+ */
+export const getStudentById = async (studentId: string) => {
+	try {
+		const student = await getStudentByIdService(studentId);
+		return student;
+	} catch (error: any) {
+		throw new Error(error.message);
 	}
 };
 
 /**
  * Get all parents
+ */
+export const getAllParents = async () => {
+	try {
+		const parents = await getAllParentsService();
+		return parents;
+	} catch (error: any) {
+		throw new Error(error.message);
+	}
+};
+
+/**
+ * Get parent by ID
+ */
+export const getParentById = async (parentId: string) => {
+	try {
+		const parent = await getParentByIdService(parentId);
+		return parent;
+	} catch (error: any) {
+		throw new Error(error.message);
+	}
+};
+
+/**
+ * Update teacher
  */
 export const editTeacher = async (teacherData: any) => {
 	try {
@@ -80,45 +136,81 @@ export const editTeacher = async (teacherData: any) => {
 			teacherData.teacherId,
 			teacherData
 		);
-		return { success: true, data: updatedTeacher };
+		return updatedTeacher;
 	} catch (error: any) {
-		return { success: false, error: error.message };
+		throw new Error(error.message);
 	}
 };
 
+/**
+ * Update student
+ */
 export const editStudent = async (studentData: any) => {
 	try {
 		const updatedStudent = await updateStudentService(
 			studentData.studentId,
 			studentData
 		);
-		return { success: true, data: updatedStudent };
+		return updatedStudent;
 	} catch (error: any) {
-		return { success: false, error: error.message };
+		throw new Error(error.message);
 	}
 };
 
+/**
+ * Update parent
+ */
 export const editParent = async (parentData: any) => {
 	try {
 		const updatedParent = await updateParentService(
 			parentData.parentId,
 			parentData
 		);
-		return { success: true, data: updatedParent };
+		return updatedParent;
 	} catch (error: any) {
-		return { success: false, error: error.message };
+		throw new Error(error.message);
 	}
 };
 
-export const getAllParents = async () => {
+/**
+ * Delete teacher
+ */
+export const deleteTeacher = async (teacherId: string) => {
 	try {
-		const parents = await getAllParentsService();
-		return { success: true, data: parents };
+		await deleteTeacherService(teacherId);
+		return { success: true, message: 'Teacher deleted successfully' };
 	} catch (error: any) {
-		return { success: false, error: error.message };
+		throw new Error(error.message);
 	}
 };
 
+/**
+ * Delete student
+ */
+export const deleteStudent = async (studentId: string) => {
+	try {
+		await deleteStudentService(studentId);
+		return { success: true, message: 'Student deleted successfully' };
+	} catch (error: any) {
+		throw new Error(error.message);
+	}
+};
+
+/**
+ * Delete parent
+ */
+export const deleteParent = async (parentId: string) => {
+	try {
+		await deleteParentService(parentId);
+		return { success: true, message: 'Parent deleted successfully' };
+	} catch (error: any) {
+		throw new Error(error.message);
+	}
+};
+
+/**
+ * Update user status
+ */
 export const updateUserStatusController = async (
 	userId: string,
 	role: 'teacher' | 'student' | 'parent',
@@ -126,8 +218,32 @@ export const updateUserStatusController = async (
 ) => {
 	try {
 		const updatedUser = await updateUserStatusService(userId, role, status);
-		return { success: true, data: updatedUser };
+		return updatedUser;
 	} catch (error: any) {
-		return { success: false, error: error.message };
+		throw new Error(error.message);
+	}
+};
+
+/**
+ * Get user roles
+ */
+export const getUserRoles = async () => {
+	try {
+		const roles = await getUserRolesService();
+		return roles;
+	} catch (error: any) {
+		throw new Error(error.message);
+	}
+};
+
+/**
+ * Update user role
+ */
+export const updateUserRole = async (userId: string, role: string) => {
+	try {
+		const updatedUser = await updateUserRoleService(userId, role);
+		return updatedUser;
+	} catch (error: any) {
+		throw new Error(error.message);
 	}
 };

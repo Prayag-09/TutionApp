@@ -18,11 +18,7 @@ export const loginService = async (email: string, password: string) => {
 
 		let isMatch = false;
 
-		if (user.role === 'principal') {
-			isMatch = user.password === password;
-		} else {
-			isMatch = await bcrypt.compare(password, user.password);
-		}
+		isMatch = await bcrypt.compare(password, user.password);
 
 		if (!isMatch) {
 			throw new Error('Invalid email or password');

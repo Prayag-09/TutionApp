@@ -1,13 +1,22 @@
 import {
 	addGradeService,
 	getAllGradesService,
+	getGradeByIdService,
 	updateGradeStatusService,
+	updateGradeService,
+	deleteGradeService,
 	addGradeSubjectService,
 	getAllGradeSubjectsService,
+	getGradeSubjectByIdService,
 	updateGradeSubjectStatusService,
+	updateGradeSubjectService,
+	deleteGradeSubjectService,
 	addSubjectService,
 	getAllSubjectsService,
+	getSubjectByIdService,
 	updateSubjectStatusService,
+	updateSubjectService,
+	deleteSubjectService,
 	addStudentSubjectService,
 	getAllStudentSubjectsService,
 	updateStudentSubjectStatusService,
@@ -37,11 +46,41 @@ export const getAllGrades = async () => {
 	}
 };
 
+// Get a single grade by ID (GET)
+export const getGradeById = async (gradeId: string) => {
+	try {
+		const grade = await getGradeByIdService(gradeId);
+		return { success: true, data: grade };
+	} catch (error: any) {
+		return { success: false, data: error.message };
+	}
+};
+
 // Update grade status (PUT)
-export const updateGradeStatus = async (gradeId: any, status: string) => {
+export const updateGradeStatus = async (gradeId: string, status: string) => {
 	try {
 		const updatedGrade = await updateGradeStatusService(gradeId, status);
 		return { success: true, data: updatedGrade };
+	} catch (error: any) {
+		return { success: false, data: error.message };
+	}
+};
+
+// Update grade details (PUT)
+export const updateGrade = async (gradeId: string, gradeData: any) => {
+	try {
+		const updatedGrade = await updateGradeService(gradeId, gradeData);
+		return { success: true, data: updatedGrade };
+	} catch (error: any) {
+		return { success: false, data: error.message };
+	}
+};
+
+// Delete a grade (DELETE)
+export const deleteGrade = async (gradeId: string) => {
+	try {
+		await deleteGradeService(gradeId);
+		return { success: true, message: 'Grade deleted successfully' };
 	} catch (error: any) {
 		return { success: false, data: error.message };
 	}
@@ -68,9 +107,19 @@ export const getAllGradeSubjects = async () => {
 	}
 };
 
+// Get a single grade-subject relation by ID (GET)
+export const getGradeSubjectById = async (gradeSubjectId: string) => {
+	try {
+		const gradeSubject = await getGradeSubjectByIdService(gradeSubjectId);
+		return { success: true, data: gradeSubject };
+	} catch (error: any) {
+		return { success: false, data: error.message };
+	}
+};
+
 // Update grade-subject status (PUT)
 export const updateGradeSubjectStatus = async (
-	gradeSubjectId: any,
+	gradeSubjectId: string,
 	status: string
 ) => {
 	try {
@@ -79,6 +128,32 @@ export const updateGradeSubjectStatus = async (
 			status
 		);
 		return { success: true, data: updatedRelation };
+	} catch (error: any) {
+		return { success: false, data: error.message };
+	}
+};
+
+// Update grade-subject relation (PUT)
+export const updateGradeSubject = async (gradeSubjectId: string, data: any) => {
+	try {
+		const updatedRelation = await updateGradeSubjectService(
+			gradeSubjectId,
+			data
+		);
+		return { success: true, data: updatedRelation };
+	} catch (error: any) {
+		return { success: false, data: error.message };
+	}
+};
+
+// Delete a grade-subject relation (DELETE)
+export const deleteGradeSubject = async (gradeSubjectId: string) => {
+	try {
+		await deleteGradeSubjectService(gradeSubjectId);
+		return {
+			success: true,
+			message: 'Grade-Subject relation deleted successfully',
+		};
 	} catch (error: any) {
 		return { success: false, data: error.message };
 	}
@@ -105,14 +180,44 @@ export const getAllSubjects = async () => {
 	}
 };
 
+// Get a single subject by ID (GET)
+export const getSubjectById = async (subjectId: string) => {
+	try {
+		const subject = await getSubjectByIdService(subjectId);
+		return { success: true, data: subject };
+	} catch (error: any) {
+		return { success: false, data: error.message };
+	}
+};
+
 // Update subject status (PUT)
 export const updateSubjectStatus = async (
-	subjectId: any,
+	subjectId: string,
 	status: string
 ) => {
 	try {
 		const updatedSubject = await updateSubjectStatusService(subjectId, status);
 		return { success: true, data: updatedSubject };
+	} catch (error: any) {
+		return { success: false, data: error.message };
+	}
+};
+
+// Update subject details (PUT)
+export const updateSubject = async (subjectId: string, data: any) => {
+	try {
+		const updatedSubject = await updateSubjectService(subjectId, data);
+		return { success: true, data: updatedSubject };
+	} catch (error: any) {
+		return { success: false, data: error.message };
+	}
+};
+
+// Delete a subject (DELETE)
+export const deleteSubject = async (subjectId: string) => {
+	try {
+		await deleteSubjectService(subjectId);
+		return { success: true, message: 'Subject deleted successfully' };
 	} catch (error: any) {
 		return { success: false, data: error.message };
 	}
@@ -141,7 +246,7 @@ export const getAllStudentSubjects = async () => {
 
 // Update student-subject status (PUT)
 export const updateStudentSubjectStatus = async (
-	studentSubjectId: any,
+	studentSubjectId: string,
 	status: string
 ) => {
 	try {
@@ -178,7 +283,7 @@ export const getAllAttendance = async () => {
 
 // Update attendance status (PUT)
 export const updateAttendanceStatus = async (
-	attendanceId: any,
+	attendanceId: string,
 	status: string
 ) => {
 	try {

@@ -1,13 +1,14 @@
 {
-  "name": "tutionapp",
-  "version": "1.0.0",
-  "main": "index.js",
-  "scripts": {
-    "app" : "cd app && npm run dev" ,
-    "server" : "cd server && npm run dev " ,
-    "start" : "npm run app & npm run server"
-  },
-  "author": "",
-  "license": "ISC",
-  "description": ""
+	"name": "tutionapp",
+	"version": "1.0.0",
+	"main": "index.js",
+	"scripts": {
+		"app": "cd app && npm run dev",
+		"server": "cd server && npm run dev ",
+		"start": "npm run app & npm run server",
+		"dev": "npm start"
+	},
+	"author": "",
+	"license": "ISC",
+	"description": ""
 }

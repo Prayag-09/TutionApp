@@ -8,6 +8,7 @@ import {
 	modifyFeeStatusService,
 	deleteFeeRemittanceService,
 	updateFeeService,
+	deleteFeeService,
 } from '../services/fee-services';
 
 // **Add New Fee**
@@ -31,7 +32,10 @@ export const getAllFeesController = async () => {
 };
 
 // **Update Fee Status**
-export const updateFeeStatusController = async (feeId: any, status: string) => {
+export const updateFeeStatusController = async (
+	feeId: string,
+	status: string
+) => {
 	try {
 		const updatedFee = await modifyFeeStatusService(feeId, status);
 		return { success: true, data: updatedFee };
@@ -40,12 +44,23 @@ export const updateFeeStatusController = async (feeId: any, status: string) => {
 	}
 };
 
+// **Update Fee Details**
 export const updateFeeController = async (feeId: string, feeData: any) => {
 	try {
 		const updatedFee = await updateFeeService(feeId, feeData);
 		return { success: true, data: updatedFee };
 	} catch (error: any) {
 		throw new Error(error.message || 'Error updating fee');
+	}
+};
+
+// **Delete a Fee**
+export const deleteFeeController = async (feeId: string) => {
+	try {
+		await deleteFeeService(feeId);
+		return { success: true, message: 'Fee deleted successfully' };
+	} catch (error: any) {
+		throw new Error(error.message || 'Error deleting fee');
 	}
 };
 
@@ -70,7 +85,9 @@ export const fetchAllFeeRemittancesController = async () => {
 };
 
 // **Fetch fee remittances by student ID**
-export const fetchRemittancesByStudentController = async (studentId: any) => {
+export const fetchRemittancesByStudentController = async (
+	studentId: string
+) => {
 	try {
 		const remittances = await fetchRemittancesByStudentService(studentId);
 		return { success: true, data: remittances };
@@ -80,7 +97,7 @@ export const fetchRemittancesByStudentController = async (studentId: any) => {
 };
 
 // **Fetch a single fee remittance by ID**
-export const fetchRemittanceByIdController = async (remittanceId: any) => {
+export const fetchRemittanceByIdController = async (remittanceId: string) => {
 	try {
 		const remittance = await fetchRemittanceByIdService(remittanceId);
 		return { success: true, data: remittance };
@@ -90,7 +107,7 @@ export const fetchRemittanceByIdController = async (remittanceId: any) => {
 };
 
 // **Delete a fee remittance**
-export const deleteFeeRemittanceController = async (remittanceId: any) => {
+export const deleteFeeRemittanceController = async (remittanceId: string) => {
 	try {
 		await deleteFeeRemittanceService(remittanceId);
 		return { success: true, message: 'Fee remittance deleted successfully' };

@@ -9,6 +9,14 @@ import {
 	getAllParents,
 	getAllStudents,
 	getAllTeachers,
+	getTeacherById, // New controller
+	getStudentById, // New controller
+	getParentById, // New controller
+	deleteTeacher, // New controller
+	deleteStudent, // New controller
+	deleteParent, // New controller
+	getUserRoles, // New controller
+	updateUserRole, // New controller
 	editTeacher,
 	editStudent,
 	editParent,
@@ -69,6 +77,17 @@ router.get(
 	})
 );
 
+// Get Parent by ID
+router.get(
+	'/parents/:id',
+	authenticate,
+	authorize(['principal']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const parent = await getParentById(req.params.id);
+		res.status(200).json({ success: true, data: parent });
+	})
+);
+
 // Get All Students
 router.get(
 	'/students',
@@ -80,6 +99,17 @@ router.get(
 	})
 );
 
+// Get Student by ID
+router.get(
+	'/students/:id',
+	authenticate,
+	authorize(['principal', 'teacher']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const student = await getStudentById(req.params.id);
+		res.status(200).json({ success: true, data: student });
+	})
+);
+
 // Get All Teachers
 router.get(
 	'/teachers',
@@ -88,6 +118,17 @@ router.get(
 	asyncHandler(async (_req: Request, res: Response) => {
 		const teachers = await getAllTeachers();
 		res.status(200).json({ success: true, data: teachers });
+	})
+);
+
+// Get Teacher by ID
+router.get(
+	'/teachers/:id',
+	authenticate,
+	authorize(['principal']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const teacher = await getTeacherById(req.params.id);
+		res.status(200).json({ success: true, data: teacher });
 	})
 );
 
@@ -133,6 +174,45 @@ router.put(
 			message: 'Successfully updated the parent',
 			data: updatedParent,
 		});
+	})
+);
+
+// Delete Teacher
+router.delete(
+	'/teachers/:id',
+	authenticate,
+	authorize(['principal']),
+	asyncHandler(async (req: Request, res: Response) => {
+		await deleteTeacher(req.params.id);
+		res
+			.status(200)
+			.json({ success: true, message: 'Teacher deleted successfully' });
+	})
+);
+
+// Delete Student
+router.delete(
+	'/students/:id',
+	authenticate,
+	authorize(['principal', 'teacher']),
+	asyncHandler(async (req: Request, res: Response) => {
+		await deleteStudent(req.params.id);
+		res
+			.status(200)
+			.json({ success: true, message: 'Student deleted successfully' });
+	})
+);
+
+// Delete Parent
+router.delete(
+	'/parents/:id',
+	authenticate,
+	authorize(['principal']),
+	asyncHandler(async (req: Request, res: Response) => {
+		await deleteParent(req.params.id);
+		res
+			.status(200)
+			.json({ success: true, message: 'Parent deleted successfully' });
 	})
 );
 
@@ -202,5 +282,32 @@ router.put(
 	})
 );
 
-export default router;
+// Get User Roles
+router.get(
+	'/roles',
+	authenticate,
+	authorize(['principal']),
+	asyncHandler(async (_req: Request, res: Response) => {
+		const roles = await getUserRoles();
+		res.status(200).json({ success: true, data: roles });
+	})
+);
 
+// Update User Role
+router.put(
+	'/roles/:id',
+	authenticate,
+	authorize(['principal']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const { id } = req.params;
+		const { role } = req.body;
+		const updatedUser = await updateUserRole(id, role);
+		res.status(200).json({
+			success: true,
+			message: `User role updated to ${role}`,
+			data: updatedUser,
+		});
+	})
+);
+
+export default router;

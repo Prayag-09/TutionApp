@@ -54,7 +54,6 @@ export const registerTeacherService = async (
 				password: hashedPassword,
 				role: 'teacher',
 			}).save(),
-
 			new Teacher({
 				...teacherData,
 				password: undefined,
@@ -88,7 +87,6 @@ export const registerStudentService = async (
 				password: hashedPassword,
 				role: 'student',
 			}).save(),
-
 			new Student({
 				...studentData,
 				password: undefined,
@@ -124,7 +122,6 @@ export const registerParentService = async (parentData: RegisterParentData) => {
 				password: hashedPassword,
 				role: 'parent',
 			}).save(),
-
 			new Parent({
 				...parentData,
 				password: undefined,
@@ -154,6 +151,23 @@ export const getAllTeachersService = async () => {
 };
 
 /**
+ * Get Teacher by ID
+ */
+export const getTeacherByIdService = async (teacherId: string) => {
+	try {
+		const teacher = await Teacher.findById(teacherId).select('-password');
+		if (!teacher) {
+			throw new Error('Teacher not found');
+		}
+		return teacher;
+	} catch (error) {
+		throw new Error(
+			error instanceof Error ? error.message : 'Failed to retrieve teacher'
+		);
+	}
+};
+
+/**
  * Get All Students
  */
 export const getAllStudentsService = async () => {
@@ -168,6 +182,23 @@ export const getAllStudentsService = async () => {
 };
 
 /**
+ * Get Student by ID
+ */
+export const getStudentByIdService = async (studentId: string) => {
+	try {
+		const student = await Student.findById(studentId).select('-password');
+		if (!student) {
+			throw new Error('Student not found');
+		}
+		return student;
+	} catch (error) {
+		throw new Error(
+			error instanceof Error ? error.message : 'Failed to retrieve student'
+		);
+	}
+};
+
+/**
  * Get All Parents
  */
 export const getAllParentsService = async () => {
@@ -177,6 +208,23 @@ export const getAllParentsService = async () => {
 	} catch (error) {
 		throw new Error(
 			error instanceof Error ? error.message : 'Failed to retrieve parents'
+		);
+	}
+};
+
+/**
+ * Get Parent by ID
+ */
+export const getParentByIdService = async (parentId: string) => {
+	try {
+		const parent = await Parent.findById(parentId).select('-password');
+		if (!parent) {
+			throw new Error('Parent not found');
+		}
+		return parent;
+	} catch (error) {
+		throw new Error(
+			error instanceof Error ? error.message : 'Failed to retrieve parent'
 		);
 	}
 };
@@ -275,6 +323,60 @@ export const updateParentService = async (
 	}
 };
 
+/**
+ * Delete Teacher
+ */
+export const deleteTeacherService = async (teacherId: string) => {
+	try {
+		const teacher = await Teacher.findByIdAndDelete(teacherId);
+		if (!teacher) {
+			throw new Error('Teacher not found');
+		}
+		await User.findOneAndDelete({ email: teacher.email, role: 'teacher' });
+	} catch (error) {
+		throw new Error(
+			error instanceof Error ? error.message : 'Failed to delete teacher'
+		);
+	}
+};
+
+/**
+ * Delete Student
+ */
+export const deleteStudentService = async (studentId: string) => {
+	try {
+		const student = await Student.findByIdAndDelete(studentId);
+		if (!student) {
+			throw new Error('Student not found');
+		}
+		await User.findOneAndDelete({ email: student.email, role: 'student' });
+	} catch (error) {
+		throw new Error(
+			error instanceof Error ? error.message : 'Failed to delete student'
+		);
+	}
+};
+
+/**
+ * Delete Parent
+ */
+export const deleteParentService = async (parentId: string) => {
+	try {
+		const parent = await Parent.findByIdAndDelete(parentId);
+		if (!parent) {
+			throw new Error('Parent not found');
+		}
+		await User.findOneAndDelete({ email: parent.email, role: 'parent' });
+	} catch (error) {
+		throw new Error(
+			error instanceof Error ? error.message : 'Failed to delete parent'
+		);
+	}
+};
+
+/**
+ * Update User Status
+ */
 export const updateUserStatusService = async (
 	userId: string,
 	role: 'teacher' | 'student' | 'parent',
@@ -318,6 +420,72 @@ export const updateUserStatusService = async (
 	} catch (error) {
 		throw new Error(
 			error instanceof Error ? error.message : `Failed to update ${role} status`
+		);
+	}
+};
+
+/**
+ * Get User Roles
+ */
+export const getUserRolesService = async () => {
+	try {
+		const users = await User.find().select('email role');
+		return users;
+	} catch (error) {
+		throw new Error(
+			error instanceof Error ? error.message : 'Failed to retrieve user roles'
+		);
+	}
+};
+
+/**
+ * Update User Role
+ */
+export const updateUserRoleService = async (userId: string, role: string) => {
+	try {
+		const validRoles = ['principal', 'teacher', 'student', 'parent'];
+		if (!validRoles.includes(role)) {
+			throw new Error('Invalid role');
+		}
+
+		const user = await User.findByIdAndUpdate(
+			userId,
+			{ $set: { role } },
+			{ new: true, runValidators: true }
+		);
+
+		if (!user) {
+			throw new Error('User not found');
+		}
+
+		// Update the corresponding role-specific model
+		if (role === 'teacher') {
+			const teacher = await Teacher.findOneAndUpdate(
+				{ email: user.email },
+				{ $set: { role } },
+				{ new: true }
+			);
+			return teacher;
+		} else if (role === 'student') {
+			const student = await Student.findOneAndUpdate(
+				{ email: user.email },
+				{ $set: { role } },
+				{ new: true }
+			);
+			return student;
+		} else if (role === 'parent') {
+			const parent = await Parent.findOneAndUpdate(
+				{ email: user.email },
+				{ $set: { role } },
+				{ new: true }
+			);
+			return parent;
+		}
+
+		return user;
+	} catch (error) {
+		throw new Error(
+			error instanceof Error ? error.message : 'Failed to update user role'
 		);
 	}
 };

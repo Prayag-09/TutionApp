@@ -1,26 +1,31 @@
+// components/layout/Navbar.jsx
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { LogOut } from 'lucide-react';
+import { LogOut, Menu } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/Button';
 
-export default function Navbar() {
-	const [role, setRole] = useState('');
+const Navbar = ({ role, toggleSidebar }) => {
+	const [userRole, setUserRole] = useState('');
+	const [userEmail, setUserEmail] = useState('');
 	const navigate = useNavigate();
 
 	useEffect(() => {
 		const storedRole = localStorage.getItem('role');
-		setRole(storedRole || 'guest');
+		const storedEmail = localStorage.getItem('email'); // Assuming email is stored during login
+		setUserRole(storedRole || 'guest');
+		setUserEmail(storedEmail || 'User');
 	}, []);
 
 	const handleLogout = () => {
 		localStorage.removeItem('token');
 		localStorage.removeItem('role');
+		localStorage.removeItem('email');
 		navigate('/login');
 	};
 
 	const getRoleDisplayName = () => {
-		switch (role) {
+		switch (userRole) {
 			case 'principal':
 				return 'Principal';
 			case 'teacher':
@@ -36,12 +41,19 @@ export default function Navbar() {
 
 	return (
 		<header className='w-full bg-white shadow-sm border-b px-6 py-3 flex justify-between items-center'>
-			<div
-				className='text-xl font-semibold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent cursor-pointer'
-				onClick={() => navigate(`/${role}/dashboard`)}>
-				Mentora {role && `| ${getRoleDisplayName()} Panel`}
+			<div className='flex items-center gap-4'>
+				{/* Menu button for mobile view */}
+				<button className='lg:hidden text-gray-700' onClick={toggleSidebar}>
+					<Menu className='size-6' />
+				</button>
+				<div
+					className='text-xl font-semibold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent cursor-pointer'
+					onClick={() => navigate(`/${userRole}/dashboard`)}>
+					Mentora {userRole && `| ${getRoleDisplayName()} Panel`}
+				</div>
 			</div>
 			<div className='flex items-center gap-4'>
+				<span className='text-gray-700 hidden md:block'>{userEmail}</span>
 				<Button
 					variant='outline'
 					className={cn(
@@ -53,4 +65,6 @@ export default function Navbar() {
 			</div>
 		</header>
 	);
-}
+};
+
+export default Navbar;

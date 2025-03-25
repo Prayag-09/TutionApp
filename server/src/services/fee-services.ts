@@ -90,6 +90,16 @@ export const updateFeeService = async (feeId: string, feeData: any) => {
 	return { success: true, updatedFee: fee };
 };
 
+// **Delete a fee**
+export const deleteFeeService = async (feeId: string) => {
+	const fee = await Fee.findByIdAndDelete(feeId);
+	if (!fee) throw new Error('Fee not found');
+
+	// Optionally, delete associated remittances
+	await FeeRemittance.deleteMany({ feeId });
+	return { success: true, message: 'Fee deleted successfully' };
+};
+
 // **Create a new fee remittance (payment)**
 export const createFeeRemittanceService = async (remittanceData: any) => {
 	const existingRemittanceCount = await FeeRemittance.countDocuments({

@@ -1,52 +1,45 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import { authenticate, authorize } from '../middlewares/auth';
-import { validate } from '../middlewares/validate';
-import { feeValidator, feeRemittanceValidator } from '../validators';
-import { Request, Response, NextFunction } from 'express';
 import {
 	addFeeController,
 	getAllFeesController,
 	updateFeeStatusController,
+	updateFeeController,
 	createFeeRemittanceController,
 	fetchAllFeeRemittancesController,
 	fetchRemittancesByStudentController,
 	fetchRemittanceByIdController,
 	deleteFeeRemittanceController,
-	updateFeeController,
+	deleteFeeController, // New controller
 } from '../controllers/fee-controller';
 
 const router = express.Router();
 
-// **Add a new fee (Only Principal can add)**
+/* ---------- Fees ---------- */
+// Add a new fee (only principal)
 router.post(
 	'/add',
 	authenticate,
 	authorize(['principal']),
-	validate(feeValidator),
 	asyncHandler(async (req: Request, res: Response) => {
-		const feeData = req.body;
-		const newFee = await addFeeController(feeData);
-		res.status(201).json({
-			success: true,
-			message: 'Fee added successfully',
-			data: newFee,
-		});
+		const response = await addFeeController(req.body);
+		res.status(response.success ? 201 : 500).json(response);
 	})
 );
 
-// **Get all fees (Accessible by Principal, Teacher, or Student)**
+// Get all fees (accessible by principal and teacher)
 router.get(
 	'/',
 	authenticate,
-	authorize(['principal', 'teacher', 'student']),
+	authorize(['principal', 'teacher']),
 	asyncHandler(async (_req: Request, res: Response) => {
-		const fees = await getAllFeesController();
-		res.status(200).json({ success: true, data: fees });
+		const response = await getAllFeesController();
+		res.status(response.success ? 200 : 500).json(response);
 	})
 );
 
-// **Update fee status (Only Principal can update)**
+// Update fee status (only principal)
 router.put(
 	'/:feeId/status',
 	authenticate,
@@ -54,101 +47,91 @@ router.put(
 	asyncHandler(async (req: Request, res: Response) => {
 		const { feeId } = req.params;
 		const { status } = req.body;
-		const updatedFee = await updateFeeStatusController(feeId, status);
-		res.status(200).json({
-			success: true,
-			message: `Fee status updated to ${status}`,
-			data: updatedFee,
-		});
+		const response = await updateFeeStatusController(feeId, status);
+		res.status(response.success ? 200 : 500).json(response);
 	})
 );
 
-// **Update fee details (Only Principal can update)**
+// Update fee details (only principal)
 router.put(
 	'/:feeId',
 	authenticate,
 	authorize(['principal']),
-	validate(feeValidator),
 	asyncHandler(async (req: Request, res: Response) => {
 		const { feeId } = req.params;
-		const feeData = req.body;
-		const updatedFeeResponse = await updateFeeController(feeId, feeData);
-		res.status(200).json({
-			success: true,
-			message: 'Fee updated successfully',
-			data: updatedFeeResponse.data,
-		});
+		const response = await updateFeeController(feeId, req.body);
+		res.status(response.success ? 200 : 500).json(response);
 	})
 );
 
-// ──────────────────────────────────────────────────────────────────────────────
-// **FEE REMITTANCE ROUTES**
-// ──────────────────────────────────────────────────────────────────────────────
-
-// **Create a new fee remittance (Student/Parent can pay fees)**
-router.post(
-	'/remittance',
+// Delete a fee (only principal)
+router.delete(
+	'/:feeId',
 	authenticate,
-	authorize(['student', 'parent']),
-	validate(feeRemittanceValidator),
+	authorize(['principal']),
 	asyncHandler(async (req: Request, res: Response) => {
-		const remittanceData = req.body;
-		const newRemittance = await createFeeRemittanceController(remittanceData);
-		res.status(201).json({
-			success: true,
-			message: 'Fee remittance recorded successfully',
-			data: newRemittance,
-		});
+		const { feeId } = req.params;
+		const response = await deleteFeeController(feeId);
+		res.status(response.success ? 200 : 500).json(response);
 	})
 );
 
-// **Fetch all fee remittances (Only Principal can view all remittances)**
+/* ---------- Fee Remittance ---------- */
+// Create a new fee remittance (accessible by parent)
+router.post(
+	'/remittance/add',
+	authenticate,
+	authorize(['parent']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const response = await createFeeRemittanceController(req.body);
+		res.status(response.success ? 201 : 500).json(response);
+	})
+);
+
+// Get all fee remittances (accessible by principal)
 router.get(
 	'/remittance',
 	authenticate,
 	authorize(['principal']),
 	asyncHandler(async (_req: Request, res: Response) => {
-		const remittances = await fetchAllFeeRemittancesController();
-		res.status(200).json({ success: true, data: remittances });
+		const response = await fetchAllFeeRemittancesController();
+		res.status(response.success ? 200 : 500).json(response);
 	})
 );
 
-// **Fetch fee remittances by Student ID (Student/Parent can view their own payments)**
+// Get fee remittances by student ID (accessible by principal and parent)
 router.get(
 	'/remittance/student/:studentId',
 	authenticate,
-	authorize(['student', 'parent']),
+	authorize(['principal', 'parent']),
 	asyncHandler(async (req: Request, res: Response) => {
 		const { studentId } = req.params;
-		const remittances = await fetchRemittancesByStudentController(studentId);
-		res.status(200).json({ success: true, data: remittances });
+		const response = await fetchRemittancesByStudentController(studentId);
+		res.status(response.success ? 200 : 500).json(response);
 	})
 );
 
-// **Fetch a single fee remittance by ID (Principal, Student, Parent can view)**
+// Get a single fee remittance by ID (accessible by principal and parent)
 router.get(
 	'/remittance/:remittanceId',
 	authenticate,
-	authorize(['principal', 'student', 'parent']),
+	authorize(['principal', 'parent']),
 	asyncHandler(async (req: Request, res: Response) => {
 		const { remittanceId } = req.params;
-		const remittance = await fetchRemittanceByIdController(remittanceId);
-		res.status(200).json({ success: true, data: remittance });
+		const response = await fetchRemittanceByIdController(remittanceId);
+		res.status(response.success ? 200 : 500).json(response);
 	})
 );
 
-// **Delete a fee remittance (Only Principal can delete)**
+// Delete a fee remittance (only principal)
 router.delete(
 	'/remittance/:remittanceId',
 	authenticate,
 	authorize(['principal']),
 	asyncHandler(async (req: Request, res: Response) => {
 		const { remittanceId } = req.params;
-		await deleteFeeRemittanceController(remittanceId);
-		res.status(200).json({
-			success: true,
-			message: 'Fee remittance deleted successfully',
-		});
+		const response = await deleteFeeRemittanceController(remittanceId);
+		res.status(response.success ? 200 : 500).json(response);
 	})
 );
 

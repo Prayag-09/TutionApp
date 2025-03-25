@@ -4,13 +4,22 @@ import { authenticate, authorize } from '../middlewares/auth';
 import {
 	addGrade,
 	getAllGrades,
+	getGradeById, // New controller
 	updateGradeStatus,
+	updateGrade, // New controller
+	deleteGrade, // New controller
 	addGradeSubject,
 	getAllGradeSubjects,
+	getGradeSubjectById, // New controller
 	updateGradeSubjectStatus,
+	updateGradeSubject, // New controller
+	deleteGradeSubject, // New controller
 	addSubject,
 	getAllSubjects,
+	getSubjectById, // New controller
 	updateSubjectStatus,
+	updateSubject, // New controller
+	deleteSubject, // New controller
 	addStudentSubject,
 	getAllStudentSubjects,
 	updateStudentSubjectStatus,
@@ -44,6 +53,18 @@ router.get(
 	})
 );
 
+// Get a single grade by ID (accessible by principal, teacher, or student)
+router.get(
+	'/grades/:gradeId',
+	authenticate,
+	authorize(['principal', 'teacher', 'student']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const { gradeId } = req.params;
+		const response = await getGradeById(gradeId);
+		res.status(response.success ? 200 : 500).json(response);
+	})
+);
+
 // Update grade status (Live/Archived)
 router.put(
 	'/grades/:gradeId/status',
@@ -53,6 +74,30 @@ router.put(
 		const { gradeId } = req.params;
 		const { status } = req.body;
 		const response = await updateGradeStatus(gradeId, status);
+		res.status(response.success ? 200 : 500).json(response);
+	})
+);
+
+// Update grade details (full update, only principal)
+router.put(
+	'/grades/:gradeId',
+	authenticate,
+	authorize(['principal']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const { gradeId } = req.params;
+		const response = await updateGrade(gradeId, req.body);
+		res.status(response.success ? 200 : 500).json(response);
+	})
+);
+
+// Delete a grade (only principal)
+router.delete(
+	'/grades/:gradeId',
+	authenticate,
+	authorize(['principal']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const { gradeId } = req.params;
+		const response = await deleteGrade(gradeId);
 		res.status(response.success ? 200 : 500).json(response);
 	})
 );
@@ -80,6 +125,18 @@ router.get(
 	})
 );
 
+// Get a single grade-subject relation by ID (accessible by principal and teacher)
+router.get(
+	'/grade-subject/:gradeSubjectId',
+	authenticate,
+	authorize(['principal', 'teacher']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const { gradeSubjectId } = req.params;
+		const response = await getGradeSubjectById(gradeSubjectId);
+		res.status(response.success ? 200 : 500).json(response);
+	})
+);
+
 // Update grade–subject relation status
 router.put(
 	'/grade-subject/:gradeSubjectId/status',
@@ -89,6 +146,30 @@ router.put(
 		const { gradeSubjectId } = req.params;
 		const { status } = req.body;
 		const response = await updateGradeSubjectStatus(gradeSubjectId, status);
+		res.status(response.success ? 200 : 500).json(response);
+	})
+);
+
+// Update grade-subject relation (full update, only principal)
+router.put(
+	'/grade-subject/:gradeSubjectId',
+	authenticate,
+	authorize(['principal']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const { gradeSubjectId } = req.params;
+		const response = await updateGradeSubject(gradeSubjectId, req.body);
+		res.status(response.success ? 200 : 500).json(response);
+	})
+);
+
+// Delete a grade-subject relation (only principal)
+router.delete(
+	'/grade-subject/:gradeSubjectId',
+	authenticate,
+	authorize(['principal']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const { gradeSubjectId } = req.params;
+		const response = await deleteGradeSubject(gradeSubjectId);
 		res.status(response.success ? 200 : 500).json(response);
 	})
 );
@@ -116,6 +197,18 @@ router.get(
 	})
 );
 
+// Get a single subject by ID (accessible by principal, teacher, and student)
+router.get(
+	'/subjects/:subjectId',
+	authenticate,
+	authorize(['principal', 'teacher', 'student']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const { subjectId } = req.params;
+		const response = await getSubjectById(subjectId);
+		res.status(response.success ? 200 : 500).json(response);
+	})
+);
+
 // Update subject status
 router.put(
 	'/subjects/:subjectId/status',
@@ -125,6 +218,30 @@ router.put(
 		const { subjectId } = req.params;
 		const { status } = req.body;
 		const response = await updateSubjectStatus(subjectId, status);
+		res.status(response.success ? 200 : 500).json(response);
+	})
+);
+
+// Update subject details (full update, only principal)
+router.put(
+	'/subjects/:subjectId',
+	authenticate,
+	authorize(['principal']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const { subjectId } = req.params;
+		const response = await updateSubject(subjectId, req.body);
+		res.status(response.success ? 200 : 500).json(response);
+	})
+);
+
+// Delete a subject (only principal)
+router.delete(
+	'/subjects/:subjectId',
+	authenticate,
+	authorize(['principal']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const { subjectId } = req.params;
+		const response = await deleteSubject(subjectId);
 		res.status(response.success ? 200 : 500).json(response);
 	})
 );

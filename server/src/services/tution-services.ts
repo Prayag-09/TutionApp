@@ -40,8 +40,18 @@ export const getAllGradesService = async () => {
 	}
 };
 
+export const getGradeByIdService = async (gradeId: string) => {
+	try {
+		const grade = await Grade.findById(gradeId);
+		if (!grade) throw new Error('Grade not found');
+		return { success: true, data: grade };
+	} catch (error) {
+		return handleServiceError(error, 'Failed to fetch grade');
+	}
+};
+
 export const updateGradeStatusService = async (
-	gradeId: Types.ObjectId,
+	gradeId: string,
 	status: string
 ) => {
 	try {
@@ -54,6 +64,30 @@ export const updateGradeStatusService = async (
 		return { success: true, data: updatedGrade };
 	} catch (error) {
 		return handleServiceError(error, 'Failed to update grade status');
+	}
+};
+
+export const updateGradeService = async (gradeId: string, data: any) => {
+	try {
+		const updatedGrade = await Grade.findByIdAndUpdate(
+			gradeId,
+			{ $set: data },
+			{ new: true, runValidators: true }
+		);
+		if (!updatedGrade) throw new Error('Grade not found');
+		return { success: true, data: updatedGrade };
+	} catch (error) {
+		return handleServiceError(error, 'Failed to update grade');
+	}
+};
+
+export const deleteGradeService = async (gradeId: string) => {
+	try {
+		const grade = await Grade.findByIdAndDelete(gradeId);
+		if (!grade) throw new Error('Grade not found');
+		return { success: true };
+	} catch (error) {
+		return handleServiceError(error, 'Failed to delete grade');
 	}
 };
 
@@ -86,8 +120,20 @@ export const getAllGradeSubjectsService = async () => {
 	}
 };
 
+export const getGradeSubjectByIdService = async (gradeSubjectId: string) => {
+	try {
+		const gradeSubject = await GradeSubject.findById(gradeSubjectId).populate(
+			'gradeId subjectId'
+		);
+		if (!gradeSubject) throw new Error('Grade-Subject relation not found');
+		return { success: true, data: gradeSubject };
+	} catch (error) {
+		return handleServiceError(error, 'Failed to fetch grade-subject relation');
+	}
+};
+
 export const updateGradeSubjectStatusService = async (
-	gradeSubjectId: Types.ObjectId,
+	gradeSubjectId: string,
 	status: string
 ) => {
 	try {
@@ -100,6 +146,33 @@ export const updateGradeSubjectStatusService = async (
 		return { success: true, data: updatedRelation };
 	} catch (error) {
 		return handleServiceError(error, 'Failed to update grade-subject status');
+	}
+};
+
+export const updateGradeSubjectService = async (
+	gradeSubjectId: string,
+	data: any
+) => {
+	try {
+		const updatedRelation = await GradeSubject.findByIdAndUpdate(
+			gradeSubjectId,
+			{ $set: data },
+			{ new: true, runValidators: true }
+		);
+		if (!updatedRelation) throw new Error('Grade-Subject relation not found');
+		return { success: true, data: updatedRelation };
+	} catch (error) {
+		return handleServiceError(error, 'Failed to update grade-subject relation');
+	}
+};
+
+export const deleteGradeSubjectService = async (gradeSubjectId: string) => {
+	try {
+		const gradeSubject = await GradeSubject.findByIdAndDelete(gradeSubjectId);
+		if (!gradeSubject) throw new Error('Grade-Subject relation not found');
+		return { success: true };
+	} catch (error) {
+		return handleServiceError(error, 'Failed to delete grade-subject relation');
 	}
 };
 
@@ -127,8 +200,18 @@ export const getAllSubjectsService = async () => {
 	}
 };
 
+export const getSubjectByIdService = async (subjectId: string) => {
+	try {
+		const subject = await Subject.findById(subjectId);
+		if (!subject) throw new Error('Subject not found');
+		return { success: true, data: subject };
+	} catch (error) {
+		return handleServiceError(error, 'Failed to fetch subject');
+	}
+};
+
 export const updateSubjectStatusService = async (
-	subjectId: Types.ObjectId,
+	subjectId: string,
 	status: string
 ) => {
 	try {
@@ -141,6 +224,30 @@ export const updateSubjectStatusService = async (
 		return { success: true, data: updatedSubject };
 	} catch (error) {
 		return handleServiceError(error, 'Failed to update subject status');
+	}
+};
+
+export const updateSubjectService = async (subjectId: string, data: any) => {
+	try {
+		const updatedSubject = await Subject.findByIdAndUpdate(
+			subjectId,
+			{ $set: data },
+			{ new: true, runValidators: true }
+		);
+		if (!updatedSubject) throw new Error('Subject not found');
+		return { success: true, data: updatedSubject };
+	} catch (error) {
+		return handleServiceError(error, 'Failed to update subject');
+	}
+};
+
+export const deleteSubjectService = async (subjectId: string) => {
+	try {
+		const subject = await Subject.findByIdAndDelete(subjectId);
+		if (!subject) throw new Error('Subject not found');
+		return { success: true };
+	} catch (error) {
+		return handleServiceError(error, 'Failed to delete subject');
 	}
 };
 
@@ -177,7 +284,7 @@ export const getAllStudentSubjectsService = async () => {
 };
 
 export const updateStudentSubjectStatusService = async (
-	studentSubjectId: Types.ObjectId,
+	studentSubjectId: string,
 	status: string
 ) => {
 	try {
@@ -227,7 +334,7 @@ export const getAllAttendanceService = async () => {
 };
 
 export const updateAttendanceStatusService = async (
-	attendanceId: Types.ObjectId,
+	attendanceId: string,
 	status: string
 ) => {
 	try {
