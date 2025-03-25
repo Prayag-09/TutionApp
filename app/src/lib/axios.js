@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-	baseURL: import.meta.env.VITE_BACKEND_URL,
+	baseURL: import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000/api',
 });
 
 // Add token to requests
@@ -71,6 +71,5 @@ export const getUserReport = () => api.get('/reports/users');
 export const getTuitionReport = () => api.get('/reports/tuition');
 export const getFeeReport = () => api.get('/reports/fees');
 export const getAttendanceReport = () => api.get('/reports/attendance');
-
 
 export default api;

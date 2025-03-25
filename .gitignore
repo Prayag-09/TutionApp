@@ -1,7 +1,5 @@
 node_modules
-
 postman-test
-
 .env
 .vscode
 .github
