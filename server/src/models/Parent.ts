@@ -14,6 +14,7 @@ export interface IParent extends Document {
 	email?: string;
 	residentialAddress: Address;
 	status: 'Live' | 'Archive';
+	studentIds: mongoose.Types.ObjectId[];
 }
 
 const parentSchema = new Schema<IParent>(

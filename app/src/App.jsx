@@ -20,7 +20,6 @@ import PrincipalAssignments from './pages/principal/Assignments';
 import PrincipalQuizzes from './pages/principal/Quiz';
 import PrincipalFees from './pages/principal/Fees';
 import PrincipalReports from './pages/principal/Report';
-import PrincipalAccessControl from './pages/principal/AccessControl';
 
 // Teacher Pages
 import TeacherDashboard from './pages/teacher/Dashboard';
@@ -175,14 +174,6 @@ function App() {
 				element={
 					<ProtectedLayout>
 						<PrincipalReports />
-					</ProtectedLayout>
-				}
-			/>
-			<Route
-				path='/principal/access-control'
-				element={
-					<ProtectedLayout>
-						<PrincipalAccessControl />
 					</ProtectedLayout>
 				}
 			/>

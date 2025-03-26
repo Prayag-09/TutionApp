@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import {
 	getAllStudents,
 	getStudentById,
-	updateUserRole,
 	deleteStudent,
 } from '../../lib/axios';
 
@@ -111,51 +110,6 @@ const Students = () => {
 				</table>
 			</div>
 
-			{selectedStudent && (
-				<div className='mt-6 bg-white p-6 rounded-lg shadow-md'>
-					<h2 className='text-xl font-semibold mb-4'>Student Details</h2>
-					<p className='mb-2'>
-						<strong>Name:</strong> {selectedStudent.name}
-					</p>
-					<p className='mb-4'>
-						<strong>Email:</strong> {selectedStudent.email}
-					</p>
-					<form
-						onSubmit={(e) => {
-							e.preventDefault();
-							handleUpdateRole(selectedStudent._id);
-						}}
-						className='space-y-4'>
-						<div>
-							<label className='block text-sm font-medium text-gray-700'>
-								Role:
-							</label>
-							<select
-								value={editData.role}
-								onChange={(e) =>
-									setEditData({ ...editData, role: e.target.value })
-								}
-								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'>
-								<option value='student'>Student</option>
-								<option value='principal'>Principal</option>
-							</select>
-						</div>
-						<div className='flex space-x-3'>
-							<button
-								type='submit'
-								className='bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600'>
-								Update Role
-							</button>
-							<button
-								type='button'
-								onClick={() => setSelectedStudent(null)}
-								className='bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600'>
-								Cancel
-							</button>
-						</div>
-					</form>
-				</div>
-			)}
 		</div>
 	);
 };

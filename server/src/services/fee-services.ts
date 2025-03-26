@@ -1,3 +1,4 @@
+import { Types } from 'mongoose';
 import { Fee } from '../models/Fee';
 import { FeeRemittance } from '../models/FeeRemittance';
 import { Grade } from '../models/Grade';
@@ -5,6 +6,7 @@ import { Parent } from '../models/Parent';
 import { Student } from '../models/Student';
 import { Subject } from '../models/Subject';
 import { Teacher } from '../models/Teacher';
+import { StudentSubject } from '../models/StudentSubject';
 
 // **Create a new fee**
 export const createFeeService = async (feeData: any) => {
@@ -159,4 +161,65 @@ export const deleteFeeRemittanceService = async (remittanceId: string) => {
 	const deletedRemittance = await FeeRemittance.findByIdAndDelete(remittanceId);
 	if (!deletedRemittance) throw new Error('Fee remittance not found');
 	return { success: true, message: 'Fee remittance deleted successfully' };
+};
+
+// **Get fees by student ID**
+export const getFeesByStudentService = async (studentId: string) => {
+	try {
+		if (!Types.ObjectId.isValid(studentId)) {
+			throw new Error('Invalid student ID');
+		}
+
+		const studentExists = await Student.exists({ _id: studentId });
+		if (!studentExists) {
+			throw new Error('Student not found');
+		}
+
+		const studentSubjects = await StudentSubject.find({
+			studentId: new Types.ObjectId(studentId),
+		})
+			.populate('subjectId', 'name')
+			.populate('gradeId', 'gradeName')
+			.lean();
+
+		if (!studentSubjects || studentSubjects.length === 0) {
+			return {
+				success: true,
+				fees: [],
+				message: 'No subjects enrolled for this student',
+			};
+		}
+
+		const subjectIds = studentSubjects.map((ss) => ss.subjectId);
+		const gradeIds = studentSubjects.map((ss) => (ss as any).gradeId._id);
+
+		const fees = await Fee.find({
+			subjectId: { $in: subjectIds },
+			gradeId: { $in: gradeIds },
+		})
+			.populate('gradeId', 'gradeName')
+			.populate('subjectId', 'subjectName')
+			.populate('teacherId', 'name email')
+			.lean();
+
+		if (!fees || fees.length === 0) {
+			return {
+				success: true,
+				fees: [],
+				message: 'No fees found for this student’s subjects',
+			};
+		}
+
+		return { success: true, fees };
+	} catch (error) {
+		return handleServiceError(error, 'Failed to fetch fees for student');
+	}
+};
+const handleServiceError = (error: any, message: string) => {
+	console.error(error);
+	return {
+		success: false,
+		error: error.message || message,
+		details: error.details || [],
+	};
 };

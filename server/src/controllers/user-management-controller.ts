@@ -9,14 +9,13 @@ import {
 	updateStudentService,
 	updateParentService,
 	updateUserStatusService,
-	getTeacherByIdService, // New service
-	getStudentByIdService, // New service
-	getParentByIdService, // New service
-	deleteTeacherService, // New service
-	deleteStudentService, // New service
-	deleteParentService, // New service
-	getUserRolesService, // New service
-	updateUserRoleService, // New service
+	getTeacherByIdService,
+	getStudentByIdService,
+	getParentByIdService,
+	deleteTeacherService,
+	deleteStudentService,
+	deleteParentService,
+	getUserRolesService,
 } from '../services/user-management-services';
 
 /**
@@ -231,18 +230,6 @@ export const getUserRoles = async () => {
 	try {
 		const roles = await getUserRolesService();
 		return roles;
-	} catch (error: any) {
-		throw new Error(error.message);
-	}
-};
-
-/**
- * Update user role
- */
-export const updateUserRole = async (userId: string, role: string) => {
-	try {
-		const updatedUser = await updateUserRoleService(userId, role);
-		return updatedUser;
 	} catch (error: any) {
 		throw new Error(error.message);
 	}

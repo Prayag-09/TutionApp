@@ -4,28 +4,42 @@ import { authenticate, authorize } from '../middlewares/auth';
 import {
 	addGrade,
 	getAllGrades,
-	getGradeById, // New controller
+	getGradeById,
 	updateGradeStatus,
-	updateGrade, // New controller
-	deleteGrade, // New controller
+	updateGrade,
+	deleteGrade,
 	addGradeSubject,
 	getAllGradeSubjects,
-	getGradeSubjectById, // New controller
+	getGradeSubjectById,
 	updateGradeSubjectStatus,
-	updateGradeSubject, // New controller
-	deleteGradeSubject, // New controller
+	updateGradeSubject,
+	deleteGradeSubject,
 	addSubject,
 	getAllSubjects,
-	getSubjectById, // New controller
+	getSubjectById,
 	updateSubjectStatus,
-	updateSubject, // New controller
-	deleteSubject, // New controller
+	updateSubject,
+	deleteSubject,
 	addStudentSubject,
 	getAllStudentSubjects,
 	updateStudentSubjectStatus,
 	recordAttendance,
 	getAllAttendance,
 	updateAttendanceStatus,
+	addAssignment,
+	getAllAssignments,
+	getAssignmentById,
+	updateAssignment,
+	deleteAssignment,
+	addQuiz,
+	getAllQuizzes,
+	getQuizById,
+	updateQuiz,
+	deleteQuiz,
+	addQuizStudent,
+	getAllQuizStudents,
+	getQuizStudentById,
+	updateQuizStudent,
 } from '../controllers/tution-controller';
 
 const router = express.Router();
@@ -317,5 +331,203 @@ router.put(
 		res.status(response.success ? 200 : 500).json(response);
 	})
 );
+
+router.post(
+	'/assignments/add',
+	authenticate,
+	authorize(['teacher']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const response = await addAssignment(req.body);
+		res.status(response.success ? 201 : 500).json(response);
+	})
+);
+
+// Get all assignments (accessible by principal, teacher, and student)
+router.get(
+	'/assignments',
+	authenticate,
+	authorize(['principal', 'teacher', 'student']),
+	asyncHandler(async (_req: Request, res: Response) => {
+		const response = await getAllAssignments();
+		res.status(response.success ? 200 : 500).json(response);
+	})
+);
+
+// Get a single assignment by ID (accessible by principal, teacher, and student)
+router.get(
+	'/assignments/:assignmentId',
+	authenticate,
+	authorize(['principal', 'teacher', 'student']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const { assignmentId } = req.params;
+		const response = await getAssignmentById(assignmentId);
+		res.status(response.success ? 200 : 500).json(response);
+	})
+);
+
+// Update assignment details (only teacher)
+router.put(
+	'/assignments/:assignmentId',
+	authenticate,
+	authorize(['teacher']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const { assignmentId } = req.params;
+		const response = await updateAssignment(assignmentId, req.body);
+		res.status(response.success ? 200 : 500).json(response);
+	})
+);
+
+// Delete an assignment (only teacher)
+router.delete(
+	'/assignments/:assignmentId',
+	authenticate,
+	authorize(['teacher']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const { assignmentId } = req.params;
+		const response = await deleteAssignment(assignmentId);
+		res.status(response.success ? 200 : 500).json(response);
+	})
+);
+
+/* ---------- Quizzes ---------- */
+// Add a new quiz (only teacher)
+router.post(
+	'/quizzes/add',
+	authenticate,
+	authorize(['teacher']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const response = await addQuiz(req.body);
+		res.status(response.success ? 201 : 500).json(response);
+	})
+);
+
+// Get all quizzes (accessible by principal, teacher, and student)
+router.get(
+	'/quizzes',
+	authenticate,
+	authorize(['principal', 'teacher', 'student']),
+	asyncHandler(async (_req: Request, res: Response) => {
+		const response = await getAllQuizzes();
+		res.status(response.success ? 200 : 500).json(response);
+	})
+);
+
+// Get a single quiz by ID (accessible by principal, teacher, and student)
+router.get(
+	'/quizzes/:quizId',
+	authenticate,
+	authorize(['principal', 'teacher', 'student']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const { quizId } = req.params;
+		const response = await getQuizById(quizId);
+		res.status(response.success ? 200 : 500).json(response);
+	})
+);
+
+// Update quiz details (only teacher)
+router.put(
+	'/quizzes/:quizId',
+	authenticate,
+	authorize(['teacher']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const { quizId } = req.params;
+		const response = await updateQuiz(quizId, req.body);
+		res.status(response.success ? 200 : 500).json(response);
+	})
+);
+
+// Delete a quiz (only teacher)
+router.delete(
+	'/quizzes/:quizId',
+	authenticate,
+	authorize(['teacher']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const { quizId } = req.params;
+		const response = await deleteQuiz(quizId);
+		res.status(response.success ? 200 : 500).json(response);
+	})
+);
+
+/* ---------- QuizStudent ---------- */
+// Add a new quiz-student record (teacher or student can add, e.g., when student attempts quiz)
+router.post(
+	'/quiz-student/add',
+	authenticate,
+	authorize(['teacher', 'student']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const response = await addQuizStudent(req.body);
+		res.status(response.success ? 201 : 500).json(response);
+	})
+);
+
+// Get all quiz-student records (accessible by principal and teacher)
+router.get(
+	'/quiz-student',
+	authenticate,
+	authorize(['principal', 'teacher']),
+	asyncHandler(async (_req: Request, res: Response) => {
+		const response = await getAllQuizStudents();
+		res.status(response.success ? 200 : 500).json(response);
+	})
+);
+
+// Get a single quiz-student record by ID (accessible by principal, teacher, and student)
+router.get(
+	'/quiz-student/:quizStudentId',
+	authenticate,
+	authorize(['principal', 'teacher', 'student']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const { quizStudentId } = req.params;
+		const response = await getQuizStudentById(quizStudentId);
+		res.status(response.success ? 200 : 500).json(response);
+	})
+);
+
+// Update quiz-student details (e.g., mark or status, only teacher)
+router.put(
+	'/quiz-student/:quizStudentId',
+	authenticate,
+	authorize(['teacher']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const { quizStudentId } = req.params;
+		const response = await updateQuizStudent(quizStudentId, req.body);
+		res.status(response.success ? 200 : 500).json(response);
+	})
+);
+
+// /* ---------- Notes ---------- */
+// // Add a new note (only teacher)
+// router.post(
+// 	'/notes/add',
+// 	authenticate,
+// 	authorize(['teacher']),
+// 	asyncHandler(async (req: Request, res: Response) => {
+// 		const response = await addNote(req.body); // New controller
+// 		res.status(response.success ? 201 : 500).json(response);
+// 	})
+// );
+
+// // Get all notes (accessible by principal, teacher, student)
+// router.get(
+// 	'/notes',
+// 	authenticate,
+// 	authorize(['principal', 'teacher', 'student']),
+// 	asyncHandler(async (_req: Request, res: Response) => {
+// 		const response = await getAllNotes(); // New controller
+// 		res.status(response.success ? 200 : 500).json(response);
+// 	})
+// );
+
+// // Get a single note by ID (accessible by principal, teacher, student)
+// router.get(
+// 	'/notes/:noteId',
+// 	authenticate,
+// 	authorize(['principal', 'teacher', 'student']),
+// 	asyncHandler(async (req: Request, res: Response) => {
+// 		const { noteId } = req.params;
+// 		const response = await getNoteById(noteId); // New controller
+// 		res.status(response.success ? 200 : 500).json(response);
+// 	})
+// );
 
 export default router;

@@ -1,41 +1,38 @@
-// pages/principal/Assignments.jsx
 import React, { useState, useEffect } from 'react';
+import {
+	getAllAssignments,
+	createAssignment,
+	updateAssignment,
+	deleteAssignment,
+} from '../../lib/axios'; // Adjust path to your api.js
 
 const Assignments = () => {
 	const [assignments, setAssignments] = useState([]);
 	const [selectedAssignment, setSelectedAssignment] = useState(null);
 	const [editData, setEditData] = useState({
-		title: '',
-		description: '',
-		dueDate: '',
-		status: '',
+		name: '', // Changed from title to match Assignment schema
+		details: '', // Changed from description
+		dueDate: '', // Added to match schema (assuming it’s in your Assignment model)
+		maximumMark: '', // Added to match schema
+	});
+	const [newAssignmentData, setNewAssignmentData] = useState({
+		name: '',
+		gradeSubjectId: '', // Placeholder; fetch from GradeSubject API if needed
+		teacherId: '', // Placeholder; fetch from Teacher API if needed
+		details: '',
+		maximumMark: '',
 	});
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
+	const [showAddForm, setShowAddForm] = useState(false);
 
-	// Placeholder data (since no API endpoints exist for assignments)
+	// Fetch all assignments
 	useEffect(() => {
 		const fetchAssignments = async () => {
 			try {
 				setLoading(true);
-				// Replace this with actual API call when available
-				const mockAssignments = [
-					{
-						_id: '1',
-						title: 'Math Assignment 1',
-						description: 'Solve 10 problems',
-						dueDate: '2025-04-01',
-						status: 'Live',
-					},
-					{
-						_id: '2',
-						title: 'Science Assignment 1',
-						description: 'Write a report',
-						dueDate: '2025-04-05',
-						status: 'Live',
-					},
-				];
-				setAssignments(mockAssignments);
+				const res = await getAllAssignments();
+				setAssignments(res.data.data);
 			} catch (err) {
 				setError('Failed to load assignments');
 			} finally {
@@ -46,32 +43,64 @@ const Assignments = () => {
 		fetchAssignments();
 	}, []);
 
+	// View/Edit assignment details
 	const handleViewDetails = (assignment) => {
 		setSelectedAssignment(assignment);
 		setEditData({
-			title: assignment.title,
-			description: assignment.description,
-			dueDate: assignment.dueDate,
-			status: assignment.status,
+			name: assignment.name,
+			details: assignment.details,
+			dueDate: assignment.dueDate || '', // Add if part of schema
+			maximumMark: assignment.maximumMark || '',
 		});
 	};
 
-	const handleUpdate = (id) => {
-		// Replace this with actual API call when available
-		const updatedAssignment = { _id: id, ...editData };
-		setAssignments(
-			assignments.map((assignment) =>
-				assignment._id === id ? updatedAssignment : assignment
-			)
-		);
-		setSelectedAssignment(null);
-		setEditData({ title: '', description: '', dueDate: '', status: '' });
+	// Update assignment
+	const handleUpdate = async (id) => {
+		try {
+			const res = await updateAssignment(id, editData);
+			setAssignments(
+				assignments.map((assignment) =>
+					assignment._id === id ? res.data.data : assignment
+				)
+			);
+			setSelectedAssignment(null);
+			setEditData({ name: '', details: '', dueDate: '', maximumMark: '' });
+		} catch (err) {
+			setError('Failed to update assignment');
+		}
 	};
 
-	const handleDelete = (id) => {
+	// Delete assignment
+	const handleDelete = async (id) => {
 		if (window.confirm('Are you sure you want to delete this assignment?')) {
-			setAssignments(assignments.filter((assignment) => assignment._id !== id));
-			setSelectedAssignment(null);
+			try {
+				await deleteAssignment(id);
+				setAssignments(
+					assignments.filter((assignment) => assignment._id !== id)
+				);
+				setSelectedAssignment(null);
+			} catch (err) {
+				setError('Failed to delete assignment');
+			}
+		}
+	};
+
+	// Add new assignment
+	const handleAdd = async (e) => {
+		e.preventDefault();
+		try {
+			const res = await createAssignment(newAssignmentData);
+			setAssignments([...assignments, res.data.data]);
+			setNewAssignmentData({
+				name: '',
+				gradeSubjectId: '',
+				teacherId: '',
+				details: '',
+				maximumMark: '',
+			});
+			setShowAddForm(false);
+		} catch (err) {
+			setError('Failed to add assignment');
 		}
 	};
 
@@ -82,22 +111,128 @@ const Assignments = () => {
 	return (
 		<div className='assignments'>
 			<h1 className='text-2xl font-bold mb-6'>Manage Assignments</h1>
+			<button
+				onClick={() => setShowAddForm(!showAddForm)}
+				className='bg-blue-500 text-white px-4 py-2 rounded mb-4 hover:bg-blue-600'>
+				{showAddForm ? 'Cancel' : 'Add Assignment'}
+			</button>
+
+			{/* Add Assignment Form */}
+			{showAddForm && (
+				<div className='mb-6 bg-white p-6 rounded-lg shadow-md'>
+					<h2 className='text-xl font-semibold mb-4'>Add New Assignment</h2>
+					<form onSubmit={handleAdd} className='space-y-4'>
+						<div>
+							<label className='block text-sm font-medium text-gray-700'>
+								Name:
+							</label>
+							<input
+								type='text'
+								value={newAssignmentData.name}
+								onChange={(e) =>
+									setNewAssignmentData({
+										...newAssignmentData,
+										name: e.target.value,
+									})
+								}
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
+								required
+							/>
+						</div>
+						<div>
+							<label className='block text-sm font-medium text-gray-700'>
+								Grade-Subject ID:
+							</label>
+							<input
+								type='text'
+								value={newAssignmentData.gradeSubjectId}
+								onChange={(e) =>
+									setNewAssignmentData({
+										...newAssignmentData,
+										gradeSubjectId: e.target.value,
+									})
+								}
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
+								required
+							/>
+						</div>
+						<div>
+							<label className='block text-sm font-medium text-gray-700'>
+								Teacher ID:
+							</label>
+							<input
+								type='text'
+								value={newAssignmentData.teacherId}
+								onChange={(e) =>
+									setNewAssignmentData({
+										...newAssignmentData,
+										teacherId: e.target.value,
+									})
+								}
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
+								required
+							/>
+						</div>
+						<div>
+							<label className='block text-sm font-medium text-gray-700'>
+								Details:
+							</label>
+							<textarea
+								value={newAssignmentData.details}
+								onChange={(e) =>
+									setNewAssignmentData({
+										...newAssignmentData,
+										details: e.target.value,
+									})
+								}
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
+							/>
+						</div>
+						<div>
+							<label className='block text-sm font-medium text-gray-700'>
+								Maximum Mark:
+							</label>
+							<input
+								type='number'
+								value={newAssignmentData.maximumMark}
+								onChange={(e) =>
+									setNewAssignmentData({
+										...newAssignmentData,
+										maximumMark: e.target.value,
+									})
+								}
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
+								required
+							/>
+						</div>
+						<button
+							type='submit'
+							className='bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600'>
+							Add Assignment
+						</button>
+					</form>
+				</div>
+			)}
+
+			{/* Assignments Table */}
 			<div className='bg-white p-6 rounded-lg shadow-md'>
 				<table className='min-w-full border-collapse'>
 					<thead>
 						<tr className='bg-gray-100'>
-							<th className='border px-4 py-2 text-left'>Title</th>
+							<th className='border px-4 py-2 text-left'>Name</th>
 							<th className='border px-4 py-2 text-left'>Due Date</th>
-							<th className='border px-4 py-2 text-left'>Status</th>
+							<th className='border px-4 py-2 text-left'>Max Mark</th>
 							<th className='border px-4 py-2 text-left'>Actions</th>
 						</tr>
 					</thead>
 					<tbody>
 						{assignments.map((assignment) => (
 							<tr key={assignment._id} className='hover:bg-gray-50'>
-								<td className='border px-4 py-2'>{assignment.title}</td>
-								<td className='border px-4 py-2'>{assignment.dueDate}</td>
-								<td className='border px-4 py-2'>{assignment.status}</td>
+								<td className='border px-4 py-2'>{assignment.name}</td>
+								<td className='border px-4 py-2'>
+									{assignment.dueDate || 'N/A'}
+								</td>
+								<td className='border px-4 py-2'>{assignment.maximumMark}</td>
 								<td className='border px-4 py-2'>
 									<button
 										onClick={() => handleViewDetails(assignment)}
@@ -116,6 +251,7 @@ const Assignments = () => {
 				</table>
 			</div>
 
+			{/* Edit Assignment Form */}
 			{selectedAssignment && (
 				<div className='mt-6 bg-white p-6 rounded-lg shadow-md'>
 					<h2 className='text-xl font-semibold mb-4'>Assignment Details</h2>
@@ -127,13 +263,13 @@ const Assignments = () => {
 						className='space-y-4'>
 						<div>
 							<label className='block text-sm font-medium text-gray-700'>
-								Title:
+								Name:
 							</label>
 							<input
 								type='text'
-								value={editData.title}
+								value={editData.name}
 								onChange={(e) =>
-									setEditData({ ...editData, title: e.target.value })
+									setEditData({ ...editData, name: e.target.value })
 								}
 								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
 								required
@@ -141,12 +277,12 @@ const Assignments = () => {
 						</div>
 						<div>
 							<label className='block text-sm font-medium text-gray-700'>
-								Description:
+								Details:
 							</label>
 							<textarea
-								value={editData.description}
+								value={editData.details}
 								onChange={(e) =>
-									setEditData({ ...editData, description: e.target.value })
+									setEditData({ ...editData, details: e.target.value })
 								}
 								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
 							/>
@@ -162,25 +298,23 @@ const Assignments = () => {
 									setEditData({ ...editData, dueDate: e.target.value })
 								}
 								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
-								required
 							/>
 						</div>
 						<div>
 							<label className='block text-sm font-medium text-gray-700'>
-								Status:
+								Maximum Mark:
 							</label>
-							<select
-								value={editData.status}
+							<input
+								type='number'
+								value={editData.maximumMark}
 								onChange={(e) =>
-									setEditData({ ...editData, status: e.target.value })
+									setEditData({ ...editData, maximumMark: e.target.value })
 								}
-								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'>
-								<option value='Live'>Live</option>
-								<option value='Archive'>Archive</option>
-							</select>
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
+								required
+							/>
 						</div>
 						<div className='flex space-x-3'>
-							six
 							<button
 								type='submit'
 								className='bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600'>

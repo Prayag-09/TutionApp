@@ -9,14 +9,13 @@ import {
 	getAllParents,
 	getAllStudents,
 	getAllTeachers,
-	getTeacherById, // New controller
-	getStudentById, // New controller
-	getParentById, // New controller
-	deleteTeacher, // New controller
-	deleteStudent, // New controller
-	deleteParent, // New controller
-	getUserRoles, // New controller
-	updateUserRole, // New controller
+	getTeacherById,
+	getStudentById,
+	getParentById,
+	deleteTeacher,
+	deleteStudent,
+	deleteParent,
+	getUserRoles,
 	editTeacher,
 	editStudent,
 	editParent,
@@ -290,23 +289,6 @@ router.get(
 	asyncHandler(async (_req: Request, res: Response) => {
 		const roles = await getUserRoles();
 		res.status(200).json({ success: true, data: roles });
-	})
-);
-
-// Update User Role
-router.put(
-	'/roles/:id',
-	authenticate,
-	authorize(['principal']),
-	asyncHandler(async (req: Request, res: Response) => {
-		const { id } = req.params;
-		const { role } = req.body;
-		const updatedUser = await updateUserRole(id, role);
-		res.status(200).json({
-			success: true,
-			message: `User role updated to ${role}`,
-			data: updatedUser,
-		});
 	})
 );
 

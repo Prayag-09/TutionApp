@@ -1,11 +1,11 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import { z } from 'zod'; // Ensure you're using Zod for validation
 
 export interface IFee extends Document {
 	feeName: string;
 	gradeId: mongoose.Types.ObjectId;
 	subjectId: mongoose.Types.ObjectId;
 	teacherId: mongoose.Types.ObjectId;
+	gradeSubjectId?: mongoose.Types.ObjectId;
 	amount: number;
 	status: 'pending' | 'paid' | 'canceled';
 }
@@ -16,6 +16,7 @@ const feeSchema = new Schema<IFee>(
 		gradeId: { type: Schema.Types.ObjectId, ref: 'Grade', required: true },
 		subjectId: { type: Schema.Types.ObjectId, ref: 'Subject', required: true },
 		teacherId: { type: Schema.Types.ObjectId, ref: 'Teacher', required: true },
+		gradeSubjectId: { type: Schema.Types.ObjectId, ref: 'GradeSubject' },
 		amount: { type: Number, required: true },
 		status: {
 			type: String,
@@ -27,4 +28,3 @@ const feeSchema = new Schema<IFee>(
 );
 
 export const Fee = mongoose.model<IFee>('Fee', feeSchema);
-

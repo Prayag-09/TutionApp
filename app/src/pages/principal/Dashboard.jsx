@@ -1,4 +1,3 @@
-// pages/principal/Dashboard.jsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -13,7 +12,7 @@ import {
 	getAllAttendance,
 	getAllFees,
 	getAllFeeRemittances,
-} from '../../lib/axios';
+} from '../../lib/axios'; // Updated import path
 
 const Dashboard = () => {
 	const [stats, setStats] = useState({
@@ -36,6 +35,8 @@ const Dashboard = () => {
 		const fetchStats = async () => {
 			try {
 				setLoading(true);
+
+				// Fetch all data with individual error handling
 				const [
 					teachersRes,
 					studentsRes,
@@ -49,17 +50,17 @@ const Dashboard = () => {
 					feeRemittancesRes,
 					rolesRes,
 				] = await Promise.all([
-					getAllTeachers(),
-					getAllStudents(),
-					getAllParents(),
-					getAllGrades(),
-					getAllSubjects(),
-					getAllGradeSubjects(),
-					getAllStudentSubjects(),
-					getAllAttendance(),
-					getAllFees(),
-					getAllFeeRemittances(),
-					getUserRoles(),
+					getAllTeachers().catch(() => ({ data: { data: [] } })),
+					getAllStudents().catch(() => ({ data: { data: [] } })),
+					getAllParents().catch(() => ({ data: { data: [] } })),
+					getAllGrades().catch(() => ({ data: { data: [] } })),
+					getAllSubjects().catch(() => ({ data: { data: [] } })),
+					getAllGradeSubjects().catch(() => ({ data: { data: [] } })),
+					getAllStudentSubjects().catch(() => ({ data: { data: [] } })),
+					getAllAttendance().catch(() => ({ data: { data: [] } })),
+					getAllFees().catch(() => ({ data: { fees: [] } })), // Fees API returns 'fees' not 'data'
+					getAllFeeRemittances().catch(() => ({ data: { data: [] } })),
+					getUserRoles().catch(() => ({ data: { data: [] } })),
 				]);
 
 				setStats({
@@ -71,12 +72,13 @@ const Dashboard = () => {
 					gradeSubjects: gradeSubjectsRes.data.data.length,
 					studentSubjects: studentSubjectsRes.data.data.length,
 					attendanceRecords: attendanceRes.data.data.length,
-					fees: feesRes.data.data.length,
+					fees: feesRes.data.fees?.length || feesRes.data.data?.length || 0, // Handle inconsistent response
 					feeRemittances: feeRemittancesRes.data.data.length,
 					roles: rolesRes.data.data,
 				});
 			} catch (err) {
-				setError('Failed to load dashboard stats');
+				setError('Failed to load some dashboard stats');
+				console.error(err);
 			} finally {
 				setLoading(false);
 			}
@@ -150,10 +152,20 @@ const Dashboard = () => {
 				<div className='bg-white p-4 rounded-lg shadow-md'>
 					<h3 className='text-lg font-semibold'>Total Student-Subjects</h3>
 					<p className='text-2xl'>{stats.studentSubjects}</p>
+					<Link
+						to='/principal/student-subjects'
+						className='text-blue-500 hover:underline'>
+						Manage Student-Subjects
+					</Link>
 				</div>
 				<div className='bg-white p-4 rounded-lg shadow-md'>
 					<h3 className='text-lg font-semibold'>Total Attendance Records</h3>
 					<p className='text-2xl'>{stats.attendanceRecords}</p>
+					<Link
+						to='/principal/attendance'
+						className='text-blue-500 hover:underline'>
+						Manage Attendance
+					</Link>
 				</div>
 				<div className='bg-white p-4 rounded-lg shadow-md'>
 					<h3 className='text-lg font-semibold'>Total Fees</h3>
@@ -165,6 +177,11 @@ const Dashboard = () => {
 				<div className='bg-white p-4 rounded-lg shadow-md'>
 					<h3 className='text-lg font-semibold'>Total Fee Remittances</h3>
 					<p className='text-2xl'>{stats.feeRemittances}</p>
+					<Link
+						to='/principal/fee-remittances'
+						className='text-blue-500 hover:underline'>
+						Manage Fee Remittances
+					</Link>
 				</div>
 			</div>
 			<div className='mt-8'>

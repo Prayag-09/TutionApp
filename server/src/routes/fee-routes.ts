@@ -11,7 +11,8 @@ import {
 	fetchRemittancesByStudentController,
 	fetchRemittanceByIdController,
 	deleteFeeRemittanceController,
-	deleteFeeController, // New controller
+	deleteFeeController,
+	getFeesByStudentController,
 } from '../controllers/fee-controller';
 
 const router = express.Router();
@@ -35,6 +36,18 @@ router.get(
 	authorize(['principal', 'teacher']),
 	asyncHandler(async (_req: Request, res: Response) => {
 		const response = await getAllFeesController();
+		res.status(response.success ? 200 : 500).json(response);
+	})
+);
+
+// Get fees by student ID (accessible by parent)
+router.get(
+	'/student/:studentId',
+	authenticate,
+	authorize(['parent']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const { studentId } = req.params;
+		const response = await getFeesByStudentController(studentId);
 		res.status(response.success ? 200 : 500).json(response);
 	})
 );

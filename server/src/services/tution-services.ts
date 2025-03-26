@@ -4,6 +4,9 @@ import { GradeSubject } from '../models/GradeSubject';
 import { Subject } from '../models/Subject';
 import { StudentSubject } from '../models/StudentSubject';
 import { Attendance } from '../models/Attendance';
+import { Assignment } from '../models/Assignment';
+import { Quiz } from '../models/Quiz';
+import { QuizStudent } from '../models/QuizStudent';
 
 // Utility function for handling errors
 const handleServiceError = (error: any, message: string) => {
@@ -347,5 +350,197 @@ export const updateAttendanceStatusService = async (
 		return { success: true, data: updatedAttendance };
 	} catch (error) {
 		return handleServiceError(error, 'Failed to update attendance status');
+	}
+};
+/* ---------- Assignments ---------- */
+export const addAssignmentService = async (data: {
+	name: string;
+	gradeSubjectId: Types.ObjectId;
+	teacherId: Types.ObjectId;
+	details: string;
+	file?: string;
+	maximumMark: number;
+}) => {
+	try {
+		const assignment = await Assignment.create(data);
+		return { success: true, data: assignment };
+	} catch (error) {
+		return handleServiceError(error, 'Failed to add assignment');
+	}
+};
+
+export const getAllAssignmentsService = async () => {
+	try {
+		const assignments = await Assignment.find()
+			.populate('gradeSubjectId')
+			.populate('teacherId');
+		return { success: true, data: assignments };
+	} catch (error) {
+		return handleServiceError(error, 'Failed to fetch assignments');
+	}
+};
+
+export const getAssignmentByIdService = async (assignmentId: string) => {
+	try {
+		const assignment = await Assignment.findById(assignmentId)
+			.populate('gradeSubjectId')
+			.populate('teacherId');
+		if (!assignment) throw new Error('Assignment not found');
+		return { success: true, data: assignment };
+	} catch (error) {
+		return handleServiceError(error, 'Failed to fetch assignment');
+	}
+};
+
+export const updateAssignmentService = async (
+	assignmentId: string,
+	data: any
+) => {
+	try {
+		const updatedAssignment = await Assignment.findByIdAndUpdate(
+			assignmentId,
+			{ $set: data },
+			{ new: true, runValidators: true }
+		);
+		if (!updatedAssignment) throw new Error('Assignment not found');
+		return { success: true, data: updatedAssignment };
+	} catch (error) {
+		return handleServiceError(error, 'Failed to update assignment');
+	}
+};
+
+export const deleteAssignmentService = async (assignmentId: string) => {
+	try {
+		const assignment = await Assignment.findByIdAndDelete(assignmentId);
+		if (!assignment) throw new Error('Assignment not found');
+		return { success: true };
+	} catch (error) {
+		return handleServiceError(error, 'Failed to delete assignment');
+	}
+};
+
+/* ---------- Quizzes ---------- */
+export const addQuizService = async (data: {
+	name: string;
+	gradeSubjectId: Types.ObjectId;
+	teacherId: Types.ObjectId;
+	timeLimit?: number;
+	maxMark?: number;
+	questions: { question: string; options: string[]; correctOption: string }[];
+}) => {
+	try {
+		const quiz = await Quiz.create(data);
+		return { success: true, data: quiz };
+	} catch (error) {
+		return handleServiceError(error, 'Failed to add quiz');
+	}
+};
+
+export const getAllQuizzesService = async () => {
+	try {
+		const quizzes = await Quiz.find()
+			.populate('gradeSubjectId')
+			.populate('teacherId');
+		return { success: true, data: quizzes };
+	} catch (error) {
+		return handleServiceError(error, 'Failed to fetch quizzes');
+	}
+};
+
+export const getQuizByIdService = async (quizId: string) => {
+	try {
+		const quiz = await Quiz.findById(quizId)
+			.populate('gradeSubjectId')
+			.populate('teacherId');
+		if (!quiz) throw new Error('Quiz not found');
+		return { success: true, data: quiz };
+	} catch (error) {
+		return handleServiceError(error, 'Failed to fetch quiz');
+	}
+};
+
+export const updateQuizService = async (quizId: string, data: any) => {
+	try {
+		const updatedQuiz = await Quiz.findByIdAndUpdate(
+			quizId,
+			{ $set: data },
+			{ new: true, runValidators: true }
+		);
+		if (!updatedQuiz) throw new Error('Quiz not found');
+		return { success: true, data: updatedQuiz };
+	} catch (error) {
+		return handleServiceError(error, 'Failed to update quiz');
+	}
+};
+
+export const deleteQuizService = async (quizId: string) => {
+	try {
+		const quiz = await Quiz.findByIdAndDelete(quizId);
+		if (!quiz) throw new Error('Quiz not found');
+		return { success: true };
+	} catch (error) {
+		return handleServiceError(error, 'Failed to delete quiz');
+	}
+};
+
+/* ---------- QuizStudent ---------- */
+export const addQuizStudentService = async (data: {
+	quizId: Types.ObjectId;
+	studentId: Types.ObjectId;
+	mark?: number;
+}) => {
+	try {
+		const existingQuizStudent = await QuizStudent.findOne({
+			quizId: data.quizId,
+			studentId: data.studentId,
+		});
+		if (existingQuizStudent) {
+			throw new Error('Student has already attempted this quiz');
+		}
+
+		const quizStudent = await QuizStudent.create(data);
+		return { success: true, data: quizStudent };
+	} catch (error) {
+		return handleServiceError(error, 'Failed to add quiz-student record');
+	}
+};
+
+export const getAllQuizStudentsService = async () => {
+	try {
+		const quizStudents = await QuizStudent.find()
+			.populate('quizId')
+			.populate('studentId');
+		return { success: true, data: quizStudents };
+	} catch (error) {
+		return handleServiceError(error, 'Failed to fetch quiz-student records');
+	}
+};
+
+export const getQuizStudentByIdService = async (quizStudentId: string) => {
+	try {
+		const quizStudent = await QuizStudent.findById(quizStudentId)
+			.populate('quizId')
+			.populate('studentId');
+		if (!quizStudent) throw new Error('Quiz-Student record not found');
+		return { success: true, data: quizStudent };
+	} catch (error) {
+		return handleServiceError(error, 'Failed to fetch quiz-student record');
+	}
+};
+
+export const updateQuizStudentService = async (
+	quizStudentId: string,
+	data: any
+) => {
+	try {
+		const updatedQuizStudent = await QuizStudent.findByIdAndUpdate(
+			quizStudentId,
+			{ $set: data },
+			{ new: true, runValidators: true }
+		);
+		if (!updatedQuizStudent) throw new Error('Quiz-Student record not found');
+		return { success: true, data: updatedQuizStudent };
+	} catch (error) {
+		return handleServiceError(error, 'Failed to update quiz-student record');
 	}
 };

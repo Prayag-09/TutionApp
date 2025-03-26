@@ -9,6 +9,7 @@ import {
 	deleteFeeRemittanceService,
 	updateFeeService,
 	deleteFeeService,
+	getFeesByStudentService,
 } from '../services/fee-services';
 
 // **Add New Fee**
@@ -113,5 +114,20 @@ export const deleteFeeRemittanceController = async (remittanceId: string) => {
 		return { success: true, message: 'Fee remittance deleted successfully' };
 	} catch (error: any) {
 		throw new Error(error.message || 'Error deleting fee remittance');
+	}
+};
+export const getFeesByStudentController = async (studentId: string) => {
+	try {
+		const response = await getFeesByStudentService(studentId);
+		if (!response.success || !('fees' in response)) {
+			throw new Error(('error' in response ? response.error : response.message) || 'Failed to fetch fees');
+		}
+		return {
+			success: true,
+			fees: response.fees,
+			message: response.message || 'Fees retrieved successfully',
+		};
+	} catch (error: any) {
+		return { success: false, message: error.message };
 	}
 };

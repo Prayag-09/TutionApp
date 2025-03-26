@@ -1,9 +1,8 @@
-// pages/principal/Parents.jsx
+
 import React, { useState, useEffect } from 'react';
 import {
 	getAllParents,
 	getParentById,
-	updateUserRole,
 	deleteParent,
 } from '../../lib/axios';
 
@@ -37,21 +36,6 @@ const Parents = () => {
 			setEditData({ role: res.data.data.role || 'parent' });
 		} catch (err) {
 			setError('Failed to load parent details');
-		}
-	};
-
-	const handleUpdateRole = async (id) => {
-		try {
-			await updateUserRole(id, editData.role);
-			setParents(
-				parents.map((parent) =>
-					parent._id === id ? { ...parent, role: editData.role } : parent
-				)
-			);
-			setSelectedParent(null);
-			setEditData({ role: '' });
-		} catch (err) {
-			setError('Failed to update parent role');
 		}
 	};
 
@@ -119,40 +103,6 @@ const Parents = () => {
 					<p className='mb-4'>
 						<strong>Email:</strong> {selectedParent.email}
 					</p>
-					<form
-						onSubmit={(e) => {
-							e.preventDefault();
-							handleUpdateRole(selectedParent._id);
-						}}
-						className='space-y-4'>
-						<div>
-							<label className='block text-sm font-medium text-gray-700'>
-								Role:
-							</label>
-							<select
-								value={editData.role}
-								onChange={(e) =>
-									setEditData({ ...editData, role: e.target.value })
-								}
-								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'>
-								<option value='parent'>Parent</option>
-								<option value='principal'>Principal</option>
-							</select>
-						</div>
-						<div className='flex space-x-3'>
-							<button
-								type='submit'
-								className='bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600'>
-								Update Role
-							</button>
-							<button
-								type='button'
-								onClick={() => setSelectedParent(null)}
-								className='bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600'>
-								Cancel
-							</button>
-						</div>
-					</form>
 				</div>
 			)}
 		</div>

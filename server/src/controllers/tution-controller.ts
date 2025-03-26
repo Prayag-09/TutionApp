@@ -23,6 +23,20 @@ import {
 	recordAttendanceService,
 	getAllAttendanceService,
 	updateAttendanceStatusService,
+	addAssignmentService,
+	addQuizService,
+	addQuizStudentService,
+	deleteAssignmentService,
+	deleteQuizService,
+	getAllAssignmentsService,
+	getAllQuizStudentsService,
+	getAllQuizzesService,
+	getAssignmentByIdService,
+	getQuizByIdService,
+	getQuizStudentByIdService,
+	updateAssignmentService,
+	updateQuizService,
+	updateQuizStudentService,
 } from '../services/tution-services';
 
 /* ---------- Grades ---------- */
@@ -292,6 +306,161 @@ export const updateAttendanceStatus = async (
 			status
 		);
 		return { success: true, data: updatedAttendance };
+	} catch (error: any) {
+		return { success: false, data: error.message };
+	}
+};
+
+/* ---------- Assignments ---------- */
+// Add new assignment (POST)
+export const addAssignment = async (assignmentData: any) => {
+	try {
+		const newAssignment = await addAssignmentService(assignmentData);
+		return { success: true, data: newAssignment };
+	} catch (error: any) {
+		return { success: false, data: error.message };
+	}
+};
+
+// Get all assignments (GET)
+export const getAllAssignments = async () => {
+	try {
+		const assignments = await getAllAssignmentsService();
+		return { success: true, data: assignments };
+	} catch (error: any) {
+		return { success: false, data: error.message };
+	}
+};
+
+// Get a single assignment by ID (GET)
+export const getAssignmentById = async (assignmentId: string) => {
+	try {
+		const assignment = await getAssignmentByIdService(assignmentId);
+		return { success: true, data: assignment };
+	} catch (error: any) {
+		return { success: false, data: error.message };
+	}
+};
+
+// Update assignment details (PUT)
+export const updateAssignment = async (
+	assignmentId: string,
+	assignmentData: any
+) => {
+	try {
+		const updatedAssignment = await updateAssignmentService(
+			assignmentId,
+			assignmentData
+		);
+		return { success: true, data: updatedAssignment };
+	} catch (error: any) {
+		return { success: false, data: error.message };
+	}
+};
+
+// Delete an assignment (DELETE)
+export const deleteAssignment = async (assignmentId: string) => {
+	try {
+		await deleteAssignmentService(assignmentId);
+		return { success: true, message: 'Assignment deleted successfully' };
+	} catch (error: any) {
+		return { success: false, data: error.message };
+	}
+};
+
+/* ---------- Quizzes ---------- */
+// Add new quiz (POST)
+export const addQuiz = async (quizData: any) => {
+	try {
+		const newQuiz = await addQuizService(quizData);
+		return { success: true, data: newQuiz };
+	} catch (error: any) {
+		return { success: false, data: error.message };
+	}
+};
+
+// Get all quizzes (GET)
+export const getAllQuizzes = async () => {
+	try {
+		const quizzes = await getAllQuizzesService();
+		return { success: true, data: quizzes };
+	} catch (error: any) {
+		return { success: false, data: error.message };
+	}
+};
+
+// Get a single quiz by ID (GET)
+export const getQuizById = async (quizId: string) => {
+	try {
+		const quiz = await getQuizByIdService(quizId);
+		return { success: true, data: quiz };
+	} catch (error: any) {
+		return { success: false, data: error.message };
+	}
+};
+
+// Update quiz details (PUT)
+export const updateQuiz = async (quizId: string, quizData: any) => {
+	try {
+		const updatedQuiz = await updateQuizService(quizId, quizData);
+		return { success: true, data: updatedQuiz };
+	} catch (error: any) {
+		return { success: false, data: error.message };
+	}
+};
+
+// Delete a quiz (DELETE)
+export const deleteQuiz = async (quizId: string) => {
+	try {
+		await deleteQuizService(quizId);
+		return { success: true, message: 'Quiz deleted successfully' };
+	} catch (error: any) {
+		return { success: false, data: error.message };
+	}
+};
+
+/* ---------- QuizStudent ---------- */
+// Add new quiz-student record (POST)
+export const addQuizStudent = async (quizStudentData: any) => {
+	try {
+		const newQuizStudent = await addQuizStudentService(quizStudentData);
+		return { success: true, data: newQuizStudent };
+	} catch (error: any) {
+		return { success: false, data: error.message };
+	}
+};
+
+// Get all quiz-student records (GET)
+export const getAllQuizStudents = async () => {
+	try {
+		const quizStudents = await getAllQuizStudentsService();
+		return { success: true, data: quizStudents };
+	} catch (error: any) {
+		return { success: false, data: error.message };
+	}
+};
+
+// Get a single quiz-student record by ID (GET)
+export const getQuizStudentById = async (quizStudentId: string) => {
+	try {
+		const quizStudent = await getQuizStudentByIdService(quizStudentId);
+		return { success: true, data: quizStudent };
+	} catch (error: any) {
+		return { success: false, data: error.message };
+	}
+};
+
+// Update quiz-student details (PUT)
+export const updateQuizStudent = async (
+	quizStudentId: string,
+	quizStudentData: any
+) => {
+	try {
+		const updatedQuizStudent = await updateQuizStudentService(
+			quizStudentId,
+			quizStudentData
+		);
+		return { success: true, data: updatedQuizStudent };
 	} catch (error: any) {
 		return { success: false, data: error.message };
 	}
