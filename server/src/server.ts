@@ -7,7 +7,7 @@ import authRoutes from './routes/auth-routes';
 import userManagementRoutes from './routes/user-management-routes';
 import feeRoutes from './routes/fee-routes';
 import reportRoutes from './routes/report-routes';
-import tutionRoutes from './routes/tution-routes';
+import tutionRoutes from './routes/tuition-routes';
 
 dotenv.config();
 

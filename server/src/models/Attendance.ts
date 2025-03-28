@@ -3,14 +3,18 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IAttendance extends Document {
 	student: mongoose.Types.ObjectId;
 	date: Date;
-	status: 'Present' | 'Absent';
+	status: 'Present' | 'Absent' | 'Late';
 }
 
 const AttendanceSchema: Schema = new Schema<IAttendance>(
 	{
 		student: { type: Schema.Types.ObjectId, ref: 'Student', required: true },
 		date: { type: Date, required: true },
-		status: { type: String, enum: ['Present', 'Absent'], required: true },
+		status: {
+			type: String,
+			enum: ['Present', 'Absent', 'Late'],
+			required: true,
+		},
 	},
 	{ timestamps: true }
 );

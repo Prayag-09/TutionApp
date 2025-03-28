@@ -13,6 +13,8 @@ import {
 	deleteFeeRemittanceController,
 	deleteFeeController,
 	getFeesByStudentController,
+	getFeeByIdController,
+	updateFeeRemittanceController,
 } from '../controllers/fee-controller';
 
 const router = express.Router();
@@ -40,6 +42,18 @@ router.get(
 	})
 );
 
+// Get a single fee by ID (accessible by principal and teacher)
+router.get(
+	'/:feeId',
+	authenticate,
+	authorize(['principal', 'teacher']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const { feeId } = req.params;
+		const response = await getFeeByIdController(feeId); // Assumes this controller exists
+		res.status(response.success ? 200 : 500).json(response);
+	})
+);
+
 // Get fees by student ID (accessible by parent)
 router.get(
 	'/student/:studentId',
@@ -60,6 +74,11 @@ router.put(
 	asyncHandler(async (req: Request, res: Response) => {
 		const { feeId } = req.params;
 		const { status } = req.body;
+		if (!['pending', 'paid', 'canceled'].includes(status)) {
+			throw new Error(
+				'Invalid status. Allowed values: pending, paid, canceled'
+			);
+		}
 		const response = await updateFeeStatusController(feeId, status);
 		res.status(response.success ? 200 : 500).json(response);
 	})
@@ -132,6 +151,21 @@ router.get(
 	asyncHandler(async (req: Request, res: Response) => {
 		const { remittanceId } = req.params;
 		const response = await fetchRemittanceByIdController(remittanceId);
+		res.status(response.success ? 200 : 500).json(response);
+	})
+);
+
+// Update a fee remittance (only principal)
+router.put(
+	'/remittance/:remittanceId',
+	authenticate,
+	authorize(['principal']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const { remittanceId } = req.params;
+		const response = await updateFeeRemittanceController(
+			remittanceId,
+			req.body
+		); // Assumes this controller exists
 		res.status(response.success ? 200 : 500).json(response);
 	})
 );

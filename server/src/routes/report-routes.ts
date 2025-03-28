@@ -1,4 +1,3 @@
-// report-routes.ts
 import express, { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import { authenticate, authorize } from '../middlewares/auth';

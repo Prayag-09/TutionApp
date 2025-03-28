@@ -12,7 +12,7 @@ import {
 	getAllAttendance,
 	getAllFees,
 	getAllFeeRemittances,
-} from '../../lib/axios'; // Updated import path
+} from '../../lib/axios';
 
 const Dashboard = () => {
 	const [stats, setStats] = useState({
@@ -35,8 +35,8 @@ const Dashboard = () => {
 		const fetchStats = async () => {
 			try {
 				setLoading(true);
+				setError(null);
 
-				// Fetch all data with individual error handling
 				const [
 					teachersRes,
 					studentsRes,
@@ -50,34 +50,99 @@ const Dashboard = () => {
 					feeRemittancesRes,
 					rolesRes,
 				] = await Promise.all([
-					getAllTeachers().catch(() => ({ data: { data: [] } })),
-					getAllStudents().catch(() => ({ data: { data: [] } })),
-					getAllParents().catch(() => ({ data: { data: [] } })),
-					getAllGrades().catch(() => ({ data: { data: [] } })),
-					getAllSubjects().catch(() => ({ data: { data: [] } })),
-					getAllGradeSubjects().catch(() => ({ data: { data: [] } })),
-					getAllStudentSubjects().catch(() => ({ data: { data: [] } })),
-					getAllAttendance().catch(() => ({ data: { data: [] } })),
-					getAllFees().catch(() => ({ data: { fees: [] } })), // Fees API returns 'fees' not 'data'
-					getAllFeeRemittances().catch(() => ({ data: { data: [] } })),
-					getUserRoles().catch(() => ({ data: { data: [] } })),
+					getAllTeachers().catch((err) => ({
+						data: { success: false, data: [] },
+						error: err,
+					})),
+					getAllStudents().catch((err) => ({
+						data: { success: false, data: [] },
+						error: err,
+					})),
+					getAllParents().catch((err) => ({
+						data: { success: false, data: [] },
+						error: err,
+					})),
+					getAllGrades().catch((err) => ({
+						data: { success: false, data: [] },
+						error: err,
+					})),
+					getAllSubjects().catch((err) => ({
+						data: { success: false, data: [] },
+						error: err,
+					})),
+					getAllGradeSubjects().catch((err) => ({
+						data: { success: false, data: [] },
+						error: err,
+					})),
+					getAllStudentSubjects().catch((err) => ({
+						data: { success: false, data: [] },
+						error: err,
+					})),
+					getAllAttendance().catch((err) => ({
+						data: { success: false, data: [] },
+						error: err,
+					})),
+					getAllFees().catch((err) => ({
+						data: { success: false, fees: [] },
+						error: err,
+					})),
+					getAllFeeRemittances().catch((err) => ({
+						data: { success: false, data: [] },
+						error: err,
+					})),
+					getUserRoles().catch((err) => ({
+						data: { success: false, data: [] },
+						error: err,
+					})),
 				]);
 
 				setStats({
-					teachers: teachersRes.data.data.length,
-					students: studentsRes.data.data.length,
-					parents: parentsRes.data.data.length,
-					grades: gradesRes.data.data.length,
-					subjects: subjectsRes.data.data.length,
-					gradeSubjects: gradeSubjectsRes.data.data.length,
-					studentSubjects: studentSubjectsRes.data.data.length,
-					attendanceRecords: attendanceRes.data.data.length,
-					fees: feesRes.data.fees?.length || feesRes.data.data?.length || 0, // Handle inconsistent response
-					feeRemittances: feeRemittancesRes.data.data.length,
-					roles: rolesRes.data.data,
+					teachers: teachersRes.data.success ? teachersRes.data.data.length : 0,
+					students: studentsRes.data.success ? studentsRes.data.data.length : 0,
+					parents: parentsRes.data.success ? parentsRes.data.data.length : 0,
+					grades: gradesRes.data.success ? gradesRes.data.data.length : 0,
+					subjects: subjectsRes.data.success ? subjectsRes.data.data.length : 0,
+					gradeSubjects: gradeSubjectsRes.data.success
+						? gradeSubjectsRes.data.data.length
+						: 0,
+					studentSubjects: studentSubjectsRes.data.success
+						? studentSubjectsRes.data.data.length
+						: 0,
+					attendanceRecords: attendanceRes.data.success
+						? attendanceRes.data.data.length
+						: 0,
+					fees: feesRes.data.success
+						? feesRes.data.fees
+							? feesRes.data.fees.length
+							: feesRes.data.data.length
+						: 0,
+					feeRemittances: feeRemittancesRes.data.success
+						? feeRemittancesRes.data.data.length
+						: 0,
+					roles: rolesRes.data.success ? rolesRes.data.data : [],
 				});
+
+				// Check for partial failures
+				const failedCalls = [];
+				if (!teachersRes.data.success) failedCalls.push('teachers');
+				if (!studentsRes.data.success) failedCalls.push('students');
+				if (!parentsRes.data.success) failedCalls.push('parents');
+				if (!gradesRes.data.success) failedCalls.push('grades');
+				if (!subjectsRes.data.success) failedCalls.push('subjects');
+				if (!gradeSubjectsRes.data.success) failedCalls.push('grade-subjects');
+				if (!studentSubjectsRes.data.success)
+					failedCalls.push('student-subjects');
+				if (!attendanceRes.data.success) failedCalls.push('attendance');
+				if (!feesRes.data.success) failedCalls.push('fees');
+				if (!feeRemittancesRes.data.success)
+					failedCalls.push('fee remittances');
+				if (!rolesRes.data.success) failedCalls.push('roles');
+
+				if (failedCalls.length > 0) {
+					setError(`Failed to load: ${failedCalls.join(', ')}`);
+				}
 			} catch (err) {
-				setError('Failed to load some dashboard stats');
+				setError('Failed to load dashboard stats');
 				console.error(err);
 			} finally {
 				setLoading(false);

@@ -215,6 +215,47 @@ export const getFeesByStudentService = async (studentId: string) => {
 		return handleServiceError(error, 'Failed to fetch fees for student');
 	}
 };
+export const getFeeByIdService = async (feeId: string) => {
+	try {
+		const fee = await Fee.findById(feeId)
+			.populate('gradeId', 'gradeName')
+			.populate('subjectId', 'subjectName')
+			.populate('teacherId', 'name email');
+		if (!fee) throw new Error('Fee not found');
+		return { success: true, fee };
+	} catch (error: any) {
+		return handleServiceError(error, 'Failed to fetch fee');
+	}
+};
+
+// **Update a fee remittance**
+export const updateFeeRemittanceService = async (
+	remittanceId: string,
+	remittanceData: any
+) => {
+	try {
+		const remittance = await FeeRemittance.findById(remittanceId);
+		if (!remittance) throw new Error('Fee remittance not found');
+
+		const [studentExists, parentExists, feeExists] = await Promise.all([
+			Student.exists({ _id: remittanceData.studentId }),
+			Parent.exists({ _id: remittanceData.parentId }),
+			Fee.exists({ _id: remittanceData.feeId }),
+		]);
+
+		if (!studentExists) throw new Error('Invalid student ID');
+		if (!parentExists) throw new Error('Invalid parent ID');
+		if (!feeExists) throw new Error('Invalid fee ID');
+
+		Object.assign(remittance, remittanceData);
+		await remittance.save();
+		return { success: true, remittance };
+	} catch (error: any) {
+		return handleServiceError(error, 'Failed to update fee remittance');
+	}
+};
+
+// ... (keep the existing handleServiceError function)
 const handleServiceError = (error: any, message: string) => {
 	console.error(error);
 	return {
