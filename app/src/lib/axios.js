@@ -16,32 +16,35 @@ api.interceptors.request.use((config) => {
 // User Management APIs
 export const getAllTeachers = () => api.get('/users/teachers');
 export const getTeacherById = (id) => api.get(`/users/teachers/${id}`);
-export const createTeacher = (data) => api.post('/users/teachers', data); // Added
+export const createTeacher = (data) => api.post('/users/teachers', data);
 export const deleteTeacher = (id) => api.delete(`/users/teachers/${id}`);
+export const updateTeacherStatus = (id, status) =>
+	api.put(`/users/teacher/${id}/status`, { status });
 
 export const getAllStudents = () => api.get('/users/students');
 export const getStudentById = (id) => api.get(`/users/students/${id}`);
-export const createStudent = (data) => api.post('/users/students', data); // Added
+export const createStudent = (data) => api.post('/users/students', data);
 export const deleteStudent = (id) => api.delete(`/users/students/${id}`);
+export const updateStudentStatus = (id, status) =>
+	api.put(`/users/student/${id}/status`, { status });
 
 export const getAllParents = () => api.get('/users/parents');
 export const getParentById = (id) => api.get(`/users/parents/${id}`);
-export const createParent = (data) => api.post('/users/parents', data); // Added
+export const createParent = (data) => api.post('/users/parents', data);
 export const deleteParent = (id) => api.delete(`/users/parents/${id}`);
 
 export const getUserRoles = () => api.get('/users/roles');
-// Removed updateUserRole as per feedback: export const updateUserRole = (id, role) => api.put(`/users/roles/${id}`, { role });
 
 // Tuition APIs
 export const getAllGrades = () => api.get('/tution/grades');
 export const getGradeById = (id) => api.get(`/tution/grades/${id}`);
-export const createGrade = (data) => api.post('/tution/grades/add', data); // Added
+export const createGrade = (data) => api.post('/tution/grades/add', data);
 export const updateGrade = (id, data) => api.put(`/tution/grades/${id}`, data);
 export const deleteGrade = (id) => api.delete(`/tution/grades/${id}`);
 
 export const getAllSubjects = () => api.get('/tution/subjects');
 export const getSubjectById = (id) => api.get(`/tution/subjects/${id}`);
-export const createSubject = (data) => api.post('/tution/subjects/add', data); // Added
+export const createSubject = (data) => api.post('/tution/subjects/add', data);
 export const updateSubject = (id, data) =>
 	api.put(`/tution/subjects/${id}`, data);
 export const deleteSubject = (id) => api.delete(`/tution/subjects/${id}`);
@@ -50,7 +53,7 @@ export const getAllGradeSubjects = () => api.get('/tution/grade-subject');
 export const getGradeSubjectById = (id) =>
 	api.get(`/tution/grade-subject/${id}`);
 export const createGradeSubject = (data) =>
-	api.post('/tution/grade-subject/add', data); // Added
+	api.post('/tution/grade-subject/add', data);
 export const updateGradeSubject = (id, data) =>
 	api.put(`/tution/grade-subject/${id}`, data);
 export const deleteGradeSubject = (id) =>
@@ -58,17 +61,17 @@ export const deleteGradeSubject = (id) =>
 
 export const getAllStudentSubjects = () => api.get('/tution/student-subject');
 export const createStudentSubject = (data) =>
-	api.post('/tution/student-subject/add', data); // Added
+	api.post('/tution/student-subject/add', data);
 
 export const getAllAttendance = () => api.get('/tution/attendance');
 export const recordAttendance = (data) =>
-	api.post('/tution/attendance/add', data); // Added
+	api.post('/tution/attendance/add', data);
 
 // Assignment APIs
 export const getAllAssignments = () => api.get('/tution/assignments');
 export const getAssignmentById = (id) => api.get(`/tution/assignments/${id}`);
 export const createAssignment = (data) =>
-	api.post('/tution/assignments/add', data); // Added
+	api.post('/tution/assignments/add', data);
 export const updateAssignment = (id, data) =>
 	api.put(`/tution/assignments/${id}`, data);
 export const deleteAssignment = (id) => api.delete(`/tution/assignments/${id}`);
@@ -76,7 +79,7 @@ export const deleteAssignment = (id) => api.delete(`/tution/assignments/${id}`);
 // Quiz APIs
 export const getAllQuizzes = () => api.get('/tution/quizzes');
 export const getQuizById = (id) => api.get(`/tution/quizzes/${id}`);
-export const createQuiz = (data) => api.post('/tution/quizzes/add', data); // Added
+export const createQuiz = (data) => api.post('/tution/quizzes/add', data);
 export const updateQuiz = (id, data) => api.put(`/tution/quizzes/${id}`, data);
 export const deleteQuiz = (id) => api.delete(`/tution/quizzes/${id}`);
 
@@ -84,13 +87,14 @@ export const deleteQuiz = (id) => api.delete(`/tution/quizzes/${id}`);
 export const getAllQuizStudents = () => api.get('/tution/quiz-student');
 export const getQuizStudentById = (id) => api.get(`/tution/quiz-student/${id}`);
 export const createQuizStudent = (data) =>
-	api.post('/tution/quiz-student/add', data); // Added
+	api.post('/tution/quiz-student/add', data);
 export const updateQuizStudent = (id, data) =>
 	api.put(`/tution/quiz-student/${id}`, data);
 
 // Fee APIs
 export const addFee = (data) => api.post('/fees/add', data);
 export const getAllFees = () => api.get('/fees');
+export const getFeeById = (id) => api.get(`/fees/${id}`);
 export const updateFeeStatus = (id, status) =>
 	api.put(`/fees/${id}/status`, { status });
 export const updateFee = (id, data) => api.put(`/fees/${id}`, data);
@@ -114,6 +118,8 @@ export const getAttendanceByStudent = (studentId) =>
 export const getMarksReport = () => api.get('/reports/marks');
 export const getFeesByStudent = (studentId) =>
 	api.get(`/fees/student/${studentId}`);
+
+// Notes APIs
 export const createNote = (data) => api.post('/tution/notes/add', data);
 export const getAllNotes = () => api.get('/tution/notes');
 export const getNoteById = (id) => api.get(`/tution/notes/${id}`);

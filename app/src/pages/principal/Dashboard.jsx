@@ -7,11 +7,12 @@ import {
 	getUserRoles,
 	getAllGrades,
 	getAllSubjects,
-	getAllGradeSubjects,
-	getAllStudentSubjects,
-	getAllAttendance,
+	getAllAssignments,
 	getAllFees,
-	getAllFeeRemittances,
+	getUserReport,
+	getTuitionReport,
+	getFeeReport,
+	getAttendanceReport,
 } from '../../lib/axios';
 
 const Dashboard = () => {
@@ -21,12 +22,13 @@ const Dashboard = () => {
 		parents: 0,
 		grades: 0,
 		subjects: 0,
-		gradeSubjects: 0,
-		studentSubjects: 0,
-		attendanceRecords: 0,
+		assignments: 0,
 		fees: 0,
-		feeRemittances: 0,
 		roles: [],
+		userReport: null,
+		tuitionReport: null,
+		feeReport: null,
+		attendanceReport: null,
 	});
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
@@ -43,12 +45,13 @@ const Dashboard = () => {
 					parentsRes,
 					gradesRes,
 					subjectsRes,
-					gradeSubjectsRes,
-					studentSubjectsRes,
-					attendanceRes,
+					assignmentsRes,
 					feesRes,
-					feeRemittancesRes,
 					rolesRes,
+					userReportRes,
+					tuitionReportRes,
+					feeReportRes,
+					attendanceReportRes,
 				] = await Promise.all([
 					getAllTeachers().catch((err) => ({
 						data: { success: false, data: [] },
@@ -70,15 +73,7 @@ const Dashboard = () => {
 						data: { success: false, data: [] },
 						error: err,
 					})),
-					getAllGradeSubjects().catch((err) => ({
-						data: { success: false, data: [] },
-						error: err,
-					})),
-					getAllStudentSubjects().catch((err) => ({
-						data: { success: false, data: [] },
-						error: err,
-					})),
-					getAllAttendance().catch((err) => ({
+					getAllAssignments().catch((err) => ({
 						data: { success: false, data: [] },
 						error: err,
 					})),
@@ -86,12 +81,24 @@ const Dashboard = () => {
 						data: { success: false, fees: [] },
 						error: err,
 					})),
-					getAllFeeRemittances().catch((err) => ({
+					getUserRoles().catch((err) => ({
 						data: { success: false, data: [] },
 						error: err,
 					})),
-					getUserRoles().catch((err) => ({
-						data: { success: false, data: [] },
+					getUserReport().catch((err) => ({
+						data: { success: false, data: null },
+						error: err,
+					})),
+					getTuitionReport().catch((err) => ({
+						data: { success: false, data: null },
+						error: err,
+					})),
+					getFeeReport().catch((err) => ({
+						data: { success: false, data: null },
+						error: err,
+					})),
+					getAttendanceReport().catch((err) => ({
+						data: { success: false, data: null },
 						error: err,
 					})),
 				]);
@@ -102,24 +109,25 @@ const Dashboard = () => {
 					parents: parentsRes.data.success ? parentsRes.data.data.length : 0,
 					grades: gradesRes.data.success ? gradesRes.data.data.length : 0,
 					subjects: subjectsRes.data.success ? subjectsRes.data.data.length : 0,
-					gradeSubjects: gradeSubjectsRes.data.success
-						? gradeSubjectsRes.data.data.length
-						: 0,
-					studentSubjects: studentSubjectsRes.data.success
-						? studentSubjectsRes.data.data.length
-						: 0,
-					attendanceRecords: attendanceRes.data.success
-						? attendanceRes.data.data.length
+					assignments: assignmentsRes.data.success
+						? assignmentsRes.data.data.length
 						: 0,
 					fees: feesRes.data.success
 						? feesRes.data.fees
 							? feesRes.data.fees.length
 							: feesRes.data.data.length
 						: 0,
-					feeRemittances: feeRemittancesRes.data.success
-						? feeRemittancesRes.data.data.length
-						: 0,
 					roles: rolesRes.data.success ? rolesRes.data.data : [],
+					userReport: userReportRes.data.success
+						? userReportRes.data.data
+						: null,
+					tuitionReport: tuitionReportRes.data.success
+						? tuitionReportRes.data.data
+						: null,
+					feeReport: feeReportRes.data.success ? feeReportRes.data.data : null,
+					attendanceReport: attendanceReportRes.data.success
+						? attendanceReportRes.data.data
+						: null,
 				});
 
 				// Check for partial failures
@@ -129,14 +137,14 @@ const Dashboard = () => {
 				if (!parentsRes.data.success) failedCalls.push('parents');
 				if (!gradesRes.data.success) failedCalls.push('grades');
 				if (!subjectsRes.data.success) failedCalls.push('subjects');
-				if (!gradeSubjectsRes.data.success) failedCalls.push('grade-subjects');
-				if (!studentSubjectsRes.data.success)
-					failedCalls.push('student-subjects');
-				if (!attendanceRes.data.success) failedCalls.push('attendance');
+				if (!assignmentsRes.data.success) failedCalls.push('assignments');
 				if (!feesRes.data.success) failedCalls.push('fees');
-				if (!feeRemittancesRes.data.success)
-					failedCalls.push('fee remittances');
 				if (!rolesRes.data.success) failedCalls.push('roles');
+				if (!userReportRes.data.success) failedCalls.push('user report');
+				if (!tuitionReportRes.data.success) failedCalls.push('tuition report');
+				if (!feeReportRes.data.success) failedCalls.push('fee report');
+				if (!attendanceReportRes.data.success)
+					failedCalls.push('attendance report');
 
 				if (failedCalls.length > 0) {
 					setError(`Failed to load: ${failedCalls.join(', ')}`);
@@ -206,30 +214,12 @@ const Dashboard = () => {
 					</Link>
 				</div>
 				<div className='bg-white p-4 rounded-lg shadow-md'>
-					<h3 className='text-lg font-semibold'>Total Grade-Subjects</h3>
-					<p className='text-2xl'>{stats.gradeSubjects}</p>
+					<h3 className='text-lg font-semibold'>Total Assignments</h3>
+					<p className='text-2xl'>{stats.assignments}</p>
 					<Link
-						to='/principal/grade-subjects'
+						to='/principal/assignments'
 						className='text-blue-500 hover:underline'>
-						Manage Grade-Subjects
-					</Link>
-				</div>
-				<div className='bg-white p-4 rounded-lg shadow-md'>
-					<h3 className='text-lg font-semibold'>Total Student-Subjects</h3>
-					<p className='text-2xl'>{stats.studentSubjects}</p>
-					<Link
-						to='/principal/student-subjects'
-						className='text-blue-500 hover:underline'>
-						Manage Student-Subjects
-					</Link>
-				</div>
-				<div className='bg-white p-4 rounded-lg shadow-md'>
-					<h3 className='text-lg font-semibold'>Total Attendance Records</h3>
-					<p className='text-2xl'>{stats.attendanceRecords}</p>
-					<Link
-						to='/principal/attendance'
-						className='text-blue-500 hover:underline'>
-						Manage Attendance
+						Manage Assignments
 					</Link>
 				</div>
 				<div className='bg-white p-4 rounded-lg shadow-md'>
@@ -237,15 +227,6 @@ const Dashboard = () => {
 					<p className='text-2xl'>{stats.fees}</p>
 					<Link to='/principal/fees' className='text-blue-500 hover:underline'>
 						Manage Fees
-					</Link>
-				</div>
-				<div className='bg-white p-4 rounded-lg shadow-md'>
-					<h3 className='text-lg font-semibold'>Total Fee Remittances</h3>
-					<p className='text-2xl'>{stats.feeRemittances}</p>
-					<Link
-						to='/principal/fee-remittances'
-						className='text-blue-500 hover:underline'>
-						Manage Fee Remittances
 					</Link>
 				</div>
 			</div>
@@ -260,6 +241,31 @@ const Dashboard = () => {
 							</li>
 						))}
 					</ul>
+				</div>
+			</div>
+			<div className='mt-8'>
+				<h2 className='text-xl font-semibold mb-4'>Reports Overview</h2>
+				<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
+					<div className='bg-white p-4 rounded-lg shadow-md'>
+						<h3 className='text-lg font-semibold'>User Report</h3>
+						<p className='text-2xl'>{stats.userReport ? 'Available' : 'N/A'}</p>
+					</div>
+					<div className='bg-white p-4 rounded-lg shadow-md'>
+						<h3 className='text-lg font-semibold'>Tuition Report</h3>
+						<p className='text-2xl'>
+							{stats.tuitionReport ? 'Available' : 'N/A'}
+						</p>
+					</div>
+					<div className='bg-white p-4 rounded-lg shadow-md'>
+						<h3 className='text-lg font-semibold'>Fee Report</h3>
+						<p className='text-2xl'>{stats.feeReport ? 'Available' : 'N/A'}</p>
+					</div>
+					<div className='bg-white p-4 rounded-lg shadow-md'>
+						<h3 className='text-lg font-semibold'>Attendance Report</h3>
+						<p className='text-2xl'>
+							{stats.attendanceReport ? 'Available' : 'N/A'}
+						</p>
+					</div>
 				</div>
 			</div>
 			<div className='mt-6'>

@@ -3,8 +3,8 @@
 	"version": "1.0.0",
 	"main": "index.js",
 	"scripts": {
-		"app-install" : "cd app && npm install",
-		"server-install" : "cd server && npm install",
+		"app-install": "cd app && npm install",
+		"server-install": "cd server && npm install",
 		"install": "npm run app-install && npm run server-install ",
 		"app": "cd app && npm run dev",
 		"server": "cd server && npm run dev ",
@@ -13,5 +13,8 @@
 	},
 	"author": "",
 	"license": "ISC",
-	"description": ""
+	"description": "",
+	"dependencies": {
+		"react-select": "^5.10.1"
+	}
 }

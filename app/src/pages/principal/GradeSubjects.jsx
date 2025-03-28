@@ -1,4 +1,3 @@
-// pages/principal/GradeSubjects.jsx
 import React, { useState, useEffect } from 'react';
 import {
 	getAllGradeSubjects,
@@ -23,9 +22,11 @@ const GradeSubjects = () => {
 			try {
 				setLoading(true);
 				const res = await getAllGradeSubjects();
+				if (!res.data.success)
+					throw new Error(res.data.message || 'Failed to fetch grade-subjects');
 				setGradeSubjects(res.data.data);
 			} catch (err) {
-				setError('Failed to load grade-subjects');
+				setError(err.message || 'Failed to load grade-subjects');
 			} finally {
 				setLoading(false);
 			}
@@ -37,27 +38,33 @@ const GradeSubjects = () => {
 	const handleViewDetails = async (id) => {
 		try {
 			const res = await getGradeSubjectById(id);
-			setSelectedGradeSubject(res.data.data);
+			if (!res.data.success)
+				throw new Error(res.data.message || 'Failed to fetch grade-subject');
+			const data = res.data.data;
+			setSelectedGradeSubject(data);
 			setEditData({
-				gradeId: res.data.data.gradeId,
-				subjectId: res.data.data.subjectId,
-				status: res.data.data.status,
+				gradeId: data.gradeId.toString(), // Convert ObjectId to string
+				subjectId: data.subjectId.toString(), // Convert ObjectId to string
+				status: data.status,
 			});
 		} catch (err) {
-			setError('Failed to load grade-subject details');
+			setError(err.message || 'Failed to load grade-subject details');
 		}
 	};
 
-	const handleUpdate = async (id) => {
+	const handleUpdate = async (e, id) => {
+		e.preventDefault();
 		try {
 			const res = await updateGradeSubject(id, editData);
+			if (!res.data.success)
+				throw new Error(res.data.message || 'Failed to update grade-subject');
 			setGradeSubjects(
 				gradeSubjects.map((gs) => (gs._id === id ? res.data.data : gs))
 			);
 			setSelectedGradeSubject(null);
 			setEditData({ gradeId: '', subjectId: '', status: '' });
 		} catch (err) {
-			setError('Failed to update grade-subject');
+			setError(err.message || 'Failed to update grade-subject');
 		}
 	};
 
@@ -68,11 +75,13 @@ const GradeSubjects = () => {
 			)
 		) {
 			try {
-				await deleteGradeSubject(id);
+				const res = await deleteGradeSubject(id);
+				if (!res.data.success)
+					throw new Error(res.data.message || 'Failed to delete grade-subject');
 				setGradeSubjects(gradeSubjects.filter((gs) => gs._id !== id));
 				setSelectedGradeSubject(null);
 			} catch (err) {
-				setError('Failed to delete grade-subject');
+				setError(err.message || 'Failed to delete grade-subject');
 			}
 		}
 	};
@@ -82,33 +91,47 @@ const GradeSubjects = () => {
 	if (error) return <div className='text-center text-red-500'>{error}</div>;
 
 	return (
-		<div className='grade-subjects'>
-			<h1 className='text-2xl font-bold mb-6'>Manage Grade-Subjects</h1>
-			<div className='bg-white p-6 rounded-lg shadow-md'>
+		<div className='container mx-auto p-4'>
+			<h1 className='text-3xl font-bold mb-6 text-gray-800'>
+				Manage Grade-Subjects
+			</h1>
+			<div className='bg-white p-6 rounded-lg shadow-lg'>
 				<table className='min-w-full border-collapse'>
 					<thead>
-						<tr className='bg-gray-100'>
-							<th className='border px-4 py-2 text-left'>Grade ID</th>
-							<th className='border px-4 py-2 text-left'>Subject ID</th>
-							<th className='border px-4 py-2 text-left'>Status</th>
-							<th className='border px-4 py-2 text-left'>Actions</th>
+						<tr className='bg-gray-200'>
+							<th className='border px-6 py-3 text-left text-gray-700'>
+								Grade ID
+							</th>
+							<th className='border px-6 py-3 text-left text-gray-700'>
+								Subject ID
+							</th>
+							<th className='border px-6 py-3 text-left text-gray-700'>
+								Status
+							</th>
+							<th className='border px-6 py-3 text-left text-gray-700'>
+								Actions
+							</th>
 						</tr>
 					</thead>
 					<tbody>
 						{gradeSubjects.map((gs) => (
-							<tr key={gs._id} className='hover:bg-gray-50'>
-								<td className='border px-4 py-2'>{gs.gradeId}</td>
-								<td className='border px-4 py-2'>{gs.subjectId}</td>
-								<td className='border px-4 py-2'>{gs.status}</td>
-								<td className='border px-4 py-2'>
+							<tr key={gs._id} className='hover:bg-gray-50 transition-colors'>
+								<td className='border px-6 py-3'>
+									{gs.gradeId?.name || gs.gradeId?._id || 'N/A'}
+								</td>
+								<td className='border px-6 py-3'>
+									{gs.subjectId?.name || gs.subjectId?._id || 'N/A'}
+								</td>
+								<td className='border px-6 py-3'>{gs.status}</td>
+								<td className='border px-6 py-3 space-x-2'>
 									<button
 										onClick={() => handleViewDetails(gs._id)}
-										className='bg-blue-500 text-white px-3 py-1 rounded mr-2 hover:bg-blue-600'>
-										View/Edit
+										className='bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors'>
+										Edit
 									</button>
 									<button
 										onClick={() => handleDelete(gs._id)}
-										className='bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600'>
+										className='bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors'>
 										Delete
 									</button>
 								</td>
@@ -119,17 +142,16 @@ const GradeSubjects = () => {
 			</div>
 
 			{selectedGradeSubject && (
-				<div className='mt-6 bg-white p-6 rounded-lg shadow-md'>
-					<h2 className='text-xl font-semibold mb-4'>Grade-Subject Details</h2>
+				<div className='mt-8 bg-white p-6 rounded-lg shadow-lg'>
+					<h2 className='text-2xl font-semibold mb-4 text-gray-800'>
+						Edit Grade-Subject
+					</h2>
 					<form
-						onSubmit={(e) => {
-							e.preventDefault();
-							handleUpdate(selectedGradeSubject._id);
-						}}
-						className='space-y-4'>
+						onSubmit={(e) => handleUpdate(e, selectedGradeSubject._id)}
+						className='space-y-6'>
 						<div>
 							<label className='block text-sm font-medium text-gray-700'>
-								Grade ID:
+								Grade ID
 							</label>
 							<input
 								type='text'
@@ -137,13 +159,13 @@ const GradeSubjects = () => {
 								onChange={(e) =>
 									setEditData({ ...editData, gradeId: e.target.value })
 								}
-								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2'
 								required
 							/>
 						</div>
 						<div>
 							<label className='block text-sm font-medium text-gray-700'>
-								Subject ID:
+								Subject ID
 							</label>
 							<input
 								type='text'
@@ -151,34 +173,34 @@ const GradeSubjects = () => {
 								onChange={(e) =>
 									setEditData({ ...editData, subjectId: e.target.value })
 								}
-								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2'
 								required
 							/>
 						</div>
 						<div>
 							<label className='block text-sm font-medium text-gray-700'>
-								Status:
+								Status
 							</label>
 							<select
 								value={editData.status}
 								onChange={(e) =>
 									setEditData({ ...editData, status: e.target.value })
 								}
-								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'>
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2'>
 								<option value='Live'>Live</option>
 								<option value='Archive'>Archive</option>
 							</select>
 						</div>
-						<div className='flex space-x-3'>
+						<div className='flex space-x-4'>
 							<button
 								type='submit'
-								className='bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600'>
-								Update Grade-Subject
+								className='bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600 transition-colors'>
+								Update
 							</button>
 							<button
 								type='button'
 								onClick={() => setSelectedGradeSubject(null)}
-								className='bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600'>
+								className='bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600 transition-colors'>
 								Cancel
 							</button>
 						</div>

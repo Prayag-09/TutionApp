@@ -179,7 +179,7 @@ router.delete(
 
 // --- Grade-Subjects ---
 router.post(
-	'/grade-subjects',
+	'/grade-subject',
 	authenticate,
 	authorize(['principal']),
 	asyncHandler(async (req: Request, res: Response) => {
@@ -189,7 +189,7 @@ router.post(
 );
 
 router.get(
-	'/grade-subjects',
+	'/grade-subject',
 	authenticate,
 	authorize(['principal', 'teacher']),
 	asyncHandler(async (_req: Request, res: Response) => {
@@ -199,7 +199,7 @@ router.get(
 );
 
 router.get(
-	'/grade-subjects/:id',
+	'/grade-subject/:id',
 	authenticate,
 	authorize(['principal', 'teacher']),
 	asyncHandler(async (req: Request, res: Response) => {
@@ -209,7 +209,7 @@ router.get(
 );
 
 router.put(
-	'/grade-subjects/:id/status',
+	'/grade-subject/:id/status',
 	authenticate,
 	authorize(['principal']),
 	asyncHandler(async (req: Request, res: Response) => {
@@ -226,7 +226,7 @@ router.put(
 );
 
 router.put(
-	'/grade-subjects/:id',
+	'/grade-subject/:id',
 	authenticate,
 	authorize(['principal']),
 	asyncHandler(async (req: Request, res: Response) => {
@@ -239,7 +239,7 @@ router.put(
 );
 
 router.delete(
-	'/grade-subjects/:id',
+	'/grade-subject/:id',
 	authenticate,
 	authorize(['principal']),
 	asyncHandler(async (req: Request, res: Response) => {

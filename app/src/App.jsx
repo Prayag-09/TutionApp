@@ -37,6 +37,7 @@ import StudentExams from './pages/student/Exams';
 import ParentDashboard from './pages/parent/Dashboard';
 import ParentChildren from './pages/parent/Children';
 import ParentFeePayment from './pages/parent/FeePayment';
+import Grades from './pages/principal/Grades';
 function ProtectedLayout({ children }) {
 	const [role, setRole] = useState(localStorage.getItem('role'));
 	const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -125,7 +126,7 @@ function App() {
 				path='/principal/grades'
 				element={
 					<ProtectedLayout>
-						<div>Grades Page (To be implemented)</div>
+						<Grades />
 					</ProtectedLayout>
 				}
 			/>

@@ -1,5 +1,10 @@
-// pages/principal/Quizzes.jsx
 import React, { useState, useEffect } from 'react';
+import {
+	getAllQuizzes,
+	getQuizById,
+	updateQuiz,
+	deleteQuiz,
+} from '../../lib/axios';
 
 const Quizzes = () => {
 	const [quizzes, setQuizzes] = useState([]);
@@ -13,31 +18,16 @@ const Quizzes = () => {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
 
-	// Placeholder data (since no API endpoints exist for quizzes)
 	useEffect(() => {
 		const fetchQuizzes = async () => {
 			try {
 				setLoading(true);
-				// Replace this with actual API call when available
-				const mockQuizzes = [
-					{
-						_id: '1',
-						title: 'Math Quiz 1',
-						description: '10 questions',
-						dueDate: '2025-04-01',
-						status: 'Live',
-					},
-					{
-						_id: '2',
-						title: 'Science Quiz 1',
-						description: '15 questions',
-						dueDate: '2025-04-05',
-						status: 'Live',
-					},
-				];
-				setQuizzes(mockQuizzes);
+				const res = await getAllQuizzes();
+				if (!res.data.success)
+					throw new Error(res.data.message || 'Failed to fetch quizzes');
+				setQuizzes(res.data.data);
 			} catch (err) {
-				setError('Failed to load quizzes');
+				setError(err.message || 'Failed to load quizzes');
 			} finally {
 				setLoading(false);
 			}
@@ -46,28 +36,50 @@ const Quizzes = () => {
 		fetchQuizzes();
 	}, []);
 
-	const handleViewDetails = (quiz) => {
-		setSelectedQuiz(quiz);
-		setEditData({
-			title: quiz.title,
-			description: quiz.description,
-			dueDate: quiz.dueDate,
-			status: quiz.status,
-		});
+	const handleViewDetails = async (id) => {
+		try {
+			const res = await getQuizById(id);
+			if (!res.data.success)
+				throw new Error(res.data.message || 'Failed to fetch quiz');
+			setSelectedQuiz(res.data.data);
+			setEditData({
+				title: res.data.data.title,
+				description: res.data.data.description || '',
+				dueDate: res.data.data.dueDate.split('T')[0], // Format for date input
+				status: res.data.data.status,
+			});
+		} catch (err) {
+			setError(err.message || 'Failed to load quiz details');
+		}
 	};
 
-	const handleUpdate = (id) => {
-		// Replace this with actual API call when available
-		const updatedQuiz = { _id: id, ...editData };
-		setQuizzes(quizzes.map((quiz) => (quiz._id === id ? updatedQuiz : quiz)));
-		setSelectedQuiz(null);
-		setEditData({ title: '', description: '', dueDate: '', status: '' });
-	};
-
-	const handleDelete = (id) => {
-		if (window.confirm('Are you sure you want to delete this quiz?')) {
-			setQuizzes(quizzes.filter((quiz) => quiz._id !== id));
+	const handleUpdate = async (e, id) => {
+		e.preventDefault();
+		try {
+			const res = await updateQuiz(id, editData);
+			if (!res.data.success)
+				throw new Error(res.data.message || 'Failed to update quiz');
+			setQuizzes(
+				quizzes.map((quiz) => (quiz._id === id ? res.data.data : quiz))
+			);
 			setSelectedQuiz(null);
+			setEditData({ title: '', description: '', dueDate: '', status: '' });
+		} catch (err) {
+			setError(err.message || 'Failed to update quiz');
+		}
+	};
+
+	const handleDelete = async (id) => {
+		if (window.confirm('Are you sure you want to delete this quiz?')) {
+			try {
+				const res = await deleteQuiz(id);
+				if (!res.data.success)
+					throw new Error(res.data.message || 'Failed to delete quiz');
+				setQuizzes(quizzes.filter((quiz) => quiz._id !== id));
+				setSelectedQuiz(null);
+			} catch (err) {
+				setError(err.message || 'Failed to delete quiz');
+			}
 		}
 	};
 
@@ -76,33 +88,43 @@ const Quizzes = () => {
 	if (error) return <div className='text-center text-red-500'>{error}</div>;
 
 	return (
-		<div className='quizzes'>
-			<h1 className='text-2xl font-bold mb-6'>Manage Quizzes</h1>
-			<div className='bg-white p-6 rounded-lg shadow-md'>
+		<div className='container mx-auto p-4'>
+			<h1 className='text-3xl font-bold mb-6 text-gray-800'>Manage Quizzes</h1>
+			<div className='bg-white p-6 rounded-lg shadow-lg'>
 				<table className='min-w-full border-collapse'>
 					<thead>
-						<tr className='bg-gray-100'>
-							<th className='border px-4 py-2 text-left'>Title</th>
-							<th className='border px-4 py-2 text-left'>Due Date</th>
-							<th className='border px-4 py-2 text-left'>Status</th>
-							<th className='border px-4 py-2 text-left'>Actions</th>
+						<tr className='bg-gray-200'>
+							<th className='border px-6 py-3 text-left text-gray-700'>
+								Title
+							</th>
+							<th className='border px-6 py-3 text-left text-gray-700'>
+								Due Date
+							</th>
+							<th className='border px-6 py-3 text-left text-gray-700'>
+								Status
+							</th>
+							<th className='border px-6 py-3 text-left text-gray-700'>
+								Actions
+							</th>
 						</tr>
 					</thead>
 					<tbody>
 						{quizzes.map((quiz) => (
-							<tr key={quiz._id} className='hover:bg-gray-50'>
-								<td className='border px-4 py-2'>{quiz.title}</td>
-								<td className='border px-4 py-2'>{quiz.dueDate}</td>
-								<td className='border px-4 py-2'>{quiz.status}</td>
-								<td className='border px-4 py-2'>
+							<tr key={quiz._id} className='hover:bg-gray-50 transition-colors'>
+								<td className='border px-6 py-3'>{quiz.title}</td>
+								<td className='border px-6 py-3'>
+									{quiz.dueDate.split('T')[0]}
+								</td>
+								<td className='border px-6 py-3'>{quiz.status}</td>
+								<td className='border px-6 py-3 space-x-2'>
 									<button
-										onClick={() => handleViewDetails(quiz)}
-										className='bg-blue-500 text-white px-3 py-1 rounded mr-2 hover:bg-blue-600'>
-										View/Edit
+										onClick={() => handleViewDetails(quiz._id)}
+										className='bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors'>
+										Edit
 									</button>
 									<button
 										onClick={() => handleDelete(quiz._id)}
-										className='bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600'>
+										className='bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors'>
 										Delete
 									</button>
 								</td>
@@ -113,17 +135,16 @@ const Quizzes = () => {
 			</div>
 
 			{selectedQuiz && (
-				<div className='mt-6 bg-white p-6 rounded-lg shadow-md'>
-					<h2 className='text-xl font-semibold mb-4'>Quiz Details</h2>
+				<div className='mt-8 bg-white p-6 rounded-lg shadow-lg'>
+					<h2 className='text-2xl font-semibold mb-4 text-gray-800'>
+						Edit Quiz
+					</h2>
 					<form
-						onSubmit={(e) => {
-							e.preventDefault();
-							handleUpdate(selectedQuiz._id);
-						}}
-						className='space-y-4'>
+						onSubmit={(e) => handleUpdate(e, selectedQuiz._id)}
+						className='space-y-6'>
 						<div>
 							<label className='block text-sm font-medium text-gray-700'>
-								Title:
+								Title
 							</label>
 							<input
 								type='text'
@@ -131,25 +152,25 @@ const Quizzes = () => {
 								onChange={(e) =>
 									setEditData({ ...editData, title: e.target.value })
 								}
-								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2'
 								required
 							/>
 						</div>
 						<div>
 							<label className='block text-sm font-medium text-gray-700'>
-								Description:
+								Description
 							</label>
 							<textarea
 								value={editData.description}
 								onChange={(e) =>
 									setEditData({ ...editData, description: e.target.value })
 								}
-								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2'
 							/>
 						</div>
 						<div>
 							<label className='block text-sm font-medium text-gray-700'>
-								Due Date:
+								Due Date
 							</label>
 							<input
 								type='date'
@@ -157,34 +178,34 @@ const Quizzes = () => {
 								onChange={(e) =>
 									setEditData({ ...editData, dueDate: e.target.value })
 								}
-								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2'
 								required
 							/>
 						</div>
 						<div>
 							<label className='block text-sm font-medium text-gray-700'>
-								Status:
+								Status
 							</label>
 							<select
 								value={editData.status}
 								onChange={(e) =>
 									setEditData({ ...editData, status: e.target.value })
 								}
-								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'>
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2'>
 								<option value='Live'>Live</option>
 								<option value='Archive'>Archive</option>
 							</select>
 						</div>
-						<div className='flex space-x-3'>
+						<div className='flex space-x-4'>
 							<button
 								type='submit'
-								className='bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600'>
-								Update Quiz
+								className='bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600 transition-colors'>
+								Update
 							</button>
 							<button
 								type='button'
 								onClick={() => setSelectedQuiz(null)}
-								className='bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600'>
+								className='bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600 transition-colors'>
 								Cancel
 							</button>
 						</div>

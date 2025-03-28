@@ -1,77 +1,110 @@
 import React, { useState, useEffect } from 'react';
+import Select from 'react-select';
 import {
 	getAllTeachers,
 	getTeacherById,
 	createTeacher,
 	deleteTeacher,
-} from '../../lib/axios'; // Updated import path
+	updateTeacherStatus,
+	getAllGradeSubjects,
+} from '../../lib/axios';
 
 const Teachers = () => {
 	const [teachers, setTeachers] = useState([]);
 	const [selectedTeacher, setSelectedTeacher] = useState(null);
-	const [editData, setEditData] = useState({
-		name: '',
-		email: '',
-		status: '',
-	});
+	const [editStatus, setEditStatus] = useState('');
 	const [newTeacherData, setNewTeacherData] = useState({
-		name: '',
+		teacherName: '',
+		mobileNumber: '',
 		email: '',
-		password: '', // Required for creating a teacher
-		status: 'Live', // Default value
+		password: '',
+		residentialAddress: {
+			address: '',
+			city: '',
+			state: '',
+			country: '',
+			zipCode: '',
+		},
+		qualification: '',
+		status: 'Live',
+		gradeSubjects: [], // Array of { value, label } objects from react-select
 	});
+	const [gradeSubjectOptions, setGradeSubjectOptions] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
 	const [showAddForm, setShowAddForm] = useState(false);
 
-	// Fetch all teachers
+	// Fetch all teachers and grade-subjects
 	useEffect(() => {
-		const fetchTeachers = async () => {
+		const fetchData = async () => {
 			try {
 				setLoading(true);
-				const res = await getAllTeachers();
-				setTeachers(res.data.data);
+				const [teachersRes, gradeSubjectsRes] = await Promise.all([
+					getAllTeachers(),
+					getAllGradeSubjects(),
+				]);
+
+				if (!teachersRes.data.success) {
+					throw new Error(
+						teachersRes.data.message || 'Failed to fetch teachers'
+					);
+				}
+				if (!gradeSubjectsRes.data.success) {
+					throw new Error(
+						gradeSubjectsRes.data.message || 'Failed to fetch grade-subjects'
+					);
+				}
+
+				setTeachers(teachersRes.data.data);
+
+				// Format grade-subject options for react-select
+				const options = gradeSubjectsRes.data.data.map((gs) => ({
+					value: gs._id, // gradeSubjectId
+					label: `${gs.gradeId.name} - ${gs.subjectId.name}`, // e.g., "Grade 1 - Mathematics"
+				}));
+				setGradeSubjectOptions(options);
 			} catch (err) {
-				setError('Failed to load teachers');
+				setError(err.message || 'Failed to load data');
 			} finally {
 				setLoading(false);
 			}
 		};
 
-		fetchTeachers();
+		fetchData();
 	}, []);
 
-	// View/Edit teacher details
+	// View teacher details and set status for editing
 	const handleViewDetails = async (id) => {
 		try {
 			const res = await getTeacherById(id);
+			if (!res.data.success)
+				throw new Error(res.data.message || 'Failed to fetch teacher');
 			const teacher = res.data.data;
 			setSelectedTeacher(teacher);
-			setEditData({
-				name: teacher.name,
-				email: teacher.email,
-				status: teacher.status,
-			});
+			setEditStatus(teacher.status);
 		} catch (err) {
-			setError('Failed to load teacher details');
+			setError(err.message || 'Failed to load teacher details');
 		}
 	};
 
-	// Update teacher (placeholder until updateTeacher API is added)
-	const handleUpdate = async (id) => {
+	// Update teacher status
+	const handleUpdateStatus = async (e, id) => {
+		e.preventDefault();
 		try {
-			// Simulate update until updateTeacher is implemented
-			// const res = await updateTeacher(id, editData);
-			const updatedTeacher = { _id: id, ...editData };
+			const res = await updateTeacherStatus(id, editStatus);
+			if (!res.data.success)
+				throw new Error(res.data.message || 'Failed to update teacher status');
 			setTeachers(
 				teachers.map((teacher) =>
-					teacher._id === id ? updatedTeacher : teacher
+					teacher._id === id
+						? { ...teacher, status: res.data.data.status }
+						: teacher
 				)
 			);
 			setSelectedTeacher(null);
-			setEditData({ name: '', email: '', status: '' });
+			setEditStatus('');
 		} catch (err) {
-			setError('Failed to update teacher');
+			setError(err.message || 'Failed to update teacher status');
 		}
 	};
 
@@ -79,11 +112,13 @@ const Teachers = () => {
 	const handleDelete = async (id) => {
 		if (window.confirm('Are you sure you want to delete this teacher?')) {
 			try {
-				await deleteTeacher(id);
+				const res = await deleteTeacher(id);
+				if (!res.data.success)
+					throw new Error(res.data.message || 'Failed to delete teacher');
 				setTeachers(teachers.filter((teacher) => teacher._id !== id));
 				setSelectedTeacher(null);
 			} catch (err) {
-				setError('Failed to delete teacher');
+				setError(err.message || 'Failed to delete teacher');
 			}
 		}
 	};
@@ -92,12 +127,39 @@ const Teachers = () => {
 	const handleAdd = async (e) => {
 		e.preventDefault();
 		try {
-			const res = await createTeacher(newTeacherData);
+			if (!newTeacherData.gradeSubjects.length) {
+				throw new Error('At least one grade-subject is required');
+			}
+
+			const formattedData = {
+				...newTeacherData,
+				gradeSubjects: newTeacherData.gradeSubjects.map(
+					(option) => option.value
+				), // Extract gradeSubjectIds
+			};
+			const res = await createTeacher(formattedData);
+			if (!res.data.success)
+				throw new Error(res.data.message || 'Failed to add teacher');
 			setTeachers([...teachers, res.data.data]);
-			setNewTeacherData({ name: '', email: '', password: '', status: 'Live' });
+			setNewTeacherData({
+				teacherName: '',
+				mobileNumber: '',
+				email: '',
+				password: '',
+				residentialAddress: {
+					address: '',
+					city: '',
+					state: '',
+					country: '',
+					zipCode: '',
+				},
+				qualification: '',
+				status: 'Live',
+				gradeSubjects: [],
+			});
 			setShowAddForm(false);
 		} catch (err) {
-			setError('Failed to add teacher');
+			setError(err.message || 'Failed to add teacher');
 		}
 	};
 
@@ -106,36 +168,59 @@ const Teachers = () => {
 	if (error) return <div className='text-center text-red-500'>{error}</div>;
 
 	return (
-		<div className='teachers'>
-			<h1 className='text-2xl font-bold mb-6'>Manage Teachers</h1>
+		<div className='container mx-auto p-4'>
+			<h1 className='text-3xl font-bold mb-6 text-gray-800'>Manage Teachers</h1>
 			<button
 				onClick={() => setShowAddForm(!showAddForm)}
-				className='bg-blue-500 text-white px-4 py-2 rounded mb-4 hover:bg-blue-600'>
+				className='bg-blue-500 text-white px-6 py-2 rounded mb-6 hover:bg-blue-600 transition-colors'>
 				{showAddForm ? 'Cancel' : 'Add Teacher'}
 			</button>
 
 			{/* Add Teacher Form */}
 			{showAddForm && (
-				<div className='mb-6 bg-white p-6 rounded-lg shadow-md'>
-					<h2 className='text-xl font-semibold mb-4'>Add New Teacher</h2>
-					<form onSubmit={handleAdd} className='space-y-4'>
+				<div className='mb-8 bg-white p-6 rounded-lg shadow-lg'>
+					<h2 className='text-2xl font-semibold mb-4 text-gray-800'>
+						Add New Teacher
+					</h2>
+					<form onSubmit={handleAdd} className='space-y-6'>
 						<div>
 							<label className='block text-sm font-medium text-gray-700'>
-								Name:
+								Name *
 							</label>
 							<input
 								type='text'
-								value={newTeacherData.name}
+								value={newTeacherData.teacherName}
 								onChange={(e) =>
-									setNewTeacherData({ ...newTeacherData, name: e.target.value })
+									setNewTeacherData({
+										...newTeacherData,
+										teacherName: e.target.value,
+									})
 								}
-								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2'
 								required
 							/>
 						</div>
 						<div>
 							<label className='block text-sm font-medium text-gray-700'>
-								Email:
+								Mobile (10 digits) *
+							</label>
+							<input
+								type='text'
+								value={newTeacherData.mobileNumber}
+								onChange={(e) =>
+									setNewTeacherData({
+										...newTeacherData,
+										mobileNumber: e.target.value,
+									})
+								}
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2'
+								pattern='[0-9]{10}'
+								required
+							/>
+						</div>
+						<div>
+							<label className='block text-sm font-medium text-gray-700'>
+								Email *
 							</label>
 							<input
 								type='email'
@@ -146,13 +231,13 @@ const Teachers = () => {
 										email: e.target.value,
 									})
 								}
-								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2'
 								required
 							/>
 						</div>
 						<div>
 							<label className='block text-sm font-medium text-gray-700'>
-								Password:
+								Password *
 							</label>
 							<input
 								type='password'
@@ -163,13 +248,128 @@ const Teachers = () => {
 										password: e.target.value,
 									})
 								}
-								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2'
 								required
 							/>
 						</div>
 						<div>
 							<label className='block text-sm font-medium text-gray-700'>
-								Status:
+								Address *
+							</label>
+							<input
+								type='text'
+								value={newTeacherData.residentialAddress.address}
+								onChange={(e) =>
+									setNewTeacherData({
+										...newTeacherData,
+										residentialAddress: {
+											...newTeacherData.residentialAddress,
+											address: e.target.value,
+										},
+									})
+								}
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2'
+								required
+							/>
+						</div>
+						<div>
+							<label className='block text-sm font-medium text-gray-700'>
+								City *
+							</label>
+							<input
+								type='text'
+								value={newTeacherData.residentialAddress.city}
+								onChange={(e) =>
+									setNewTeacherData({
+										...newTeacherData,
+										residentialAddress: {
+											...newTeacherData.residentialAddress,
+											city: e.target.value,
+										},
+									})
+								}
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2'
+								required
+							/>
+						</div>
+						<div>
+							<label className='block text-sm font-medium text-gray-700'>
+								State *
+							</label>
+							<input
+								type='text'
+								value={newTeacherData.residentialAddress.state}
+								onChange={(e) =>
+									setNewTeacherData({
+										...newTeacherData,
+										residentialAddress: {
+											...newTeacherData.residentialAddress,
+											state: e.target.value,
+										},
+									})
+								}
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2'
+								required
+							/>
+						</div>
+						<div>
+							<label className='block text-sm font-medium text-gray-700'>
+								Country *
+							</label>
+							<input
+								type='text'
+								value={newTeacherData.residentialAddress.country}
+								onChange={(e) =>
+									setNewTeacherData({
+										...newTeacherData,
+										residentialAddress: {
+											...newTeacherData.residentialAddress,
+											country: e.target.value,
+										},
+									})
+								}
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2'
+								required
+							/>
+						</div>
+						<div>
+							<label className='block text-sm font-medium text-gray-700'>
+								Zip Code
+							</label>
+							<input
+								type='text'
+								value={newTeacherData.residentialAddress.zipCode}
+								onChange={(e) =>
+									setNewTeacherData({
+										...newTeacherData,
+										residentialAddress: {
+											...newTeacherData.residentialAddress,
+											zipCode: e.target.value,
+										},
+									})
+								}
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2'
+							/>
+						</div>
+						<div>
+							<label className='block text-sm font-medium text-gray-700'>
+								Qualification
+							</label>
+							<input
+								type='text'
+								value={newTeacherData.qualification}
+								onChange={(e) =>
+									setNewTeacherData({
+										...newTeacherData,
+										qualification: e.target.value,
+									})
+								}
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2'
+							/>
+						</div>
+						<div>
+							<label className='block text-sm font-medium text-gray-700'>
+								Status *
 							</label>
 							<select
 								value={newTeacherData.status}
@@ -179,14 +379,33 @@ const Teachers = () => {
 										status: e.target.value,
 									})
 								}
-								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'>
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2'
+								required>
 								<option value='Live'>Live</option>
 								<option value='Archive'>Archive</option>
 							</select>
 						</div>
+						<div>
+							<label className='block text-sm font-medium text-gray-700'>
+								Grade-Subjects *
+							</label>
+							<Select
+								isMulti
+								options={gradeSubjectOptions}
+								value={newTeacherData.gradeSubjects}
+								onChange={(selectedOptions) =>
+									setNewTeacherData({
+										...newTeacherData,
+										gradeSubjects: selectedOptions || [],
+									})
+								}
+								className='mt-1'
+								placeholder='Select grade-subjects...'
+							/>
+						</div>
 						<button
 							type='submit'
-							className='bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600'>
+							className='bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600 transition-colors'>
 							Add Teacher
 						</button>
 					</form>
@@ -194,31 +413,43 @@ const Teachers = () => {
 			)}
 
 			{/* Teachers Table */}
-			<div className='bg-white p-6 rounded-lg shadow-md'>
+			<div className='bg-white p-6 rounded-lg shadow-lg'>
 				<table className='min-w-full border-collapse'>
 					<thead>
-						<tr className='bg-gray-100'>
-							<th className='border px-4 py-2 text-left'>Name</th>
-							<th className='border px-4 py-2 text-left'>Email</th>
-							<th className='border px-4 py-2 text-left'>Status</th>
-							<th className='border px-4 py-2 text-left'>Actions</th>
+						<tr className='bg-gray-200'>
+							<th className='border px-6 py-3 text-left text-gray-700'>Name</th>
+							<th className='border px-6 py-3 text-left text-gray-700'>
+								Email
+							</th>
+							<th className='border px-6 py-3 text-left text-gray-700'>
+								Mobile
+							</th>
+							<th className='border px-6 py-3 text-left text-gray-700'>
+								Status
+							</th>
+							<th className='border px-6 py-3 text-left text-gray-700'>
+								Actions
+							</th>
 						</tr>
 					</thead>
 					<tbody>
 						{teachers.map((teacher) => (
-							<tr key={teacher._id} className='hover:bg-gray-50'>
-								<td className='border px-4 py-2'>{teacher.name}</td>
-								<td className='border px-4 py-2'>{teacher.email}</td>
-								<td className='border px-4 py-2'>{teacher.status}</td>
-								<td className='border px-4 py-2'>
+							<tr
+								key={teacher._id}
+								className='hover:bg-gray-50 transition-colors'>
+								<td className='border px-6 py-3'>{teacher.name}</td>
+								<td className='border px-6 py-3'>{teacher.email}</td>
+								<td className='border px-6 py-3'>{teacher.mobile}</td>
+								<td className='border px-6 py-3'>{teacher.status}</td>
+								<td className='border px-6 py-3 space-x-2'>
 									<button
 										onClick={() => handleViewDetails(teacher._id)}
-										className='bg-blue-500 text-white px-3 py-1 rounded mr-2 hover:bg-blue-600'>
-										View/Edit
+										className='bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors'>
+										Edit Status
 									</button>
 									<button
 										onClick={() => handleDelete(teacher._id)}
-										className='bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600'>
+										className='bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors'>
 										Delete
 									</button>
 								</td>
@@ -228,68 +459,156 @@ const Teachers = () => {
 				</table>
 			</div>
 
-			{/* Edit Teacher Form */}
+			{/* Edit Teacher Status Form */}
 			{selectedTeacher && (
-				<div className='mt-6 bg-white p-6 rounded-lg shadow-md'>
-					<h2 className='text-xl font-semibold mb-4'>Teacher Details</h2>
+				<div className='mt-8 bg-white p-6 rounded-lg shadow-lg'>
+					<h2 className='text-2xl font-semibold mb-4 text-gray-800'>
+						Edit Teacher Status
+					</h2>
 					<form
-						onSubmit={(e) => {
-							e.preventDefault();
-							handleUpdate(selectedTeacher._id);
-						}}
-						className='space-y-4'>
+						onSubmit={(e) => handleUpdateStatus(e, selectedTeacher._id)}
+						className='space-y-6'>
 						<div>
 							<label className='block text-sm font-medium text-gray-700'>
-								Name:
+								Name
 							</label>
 							<input
 								type='text'
-								value={editData.name}
-								onChange={(e) =>
-									setEditData({ ...editData, name: e.target.value })
-								}
-								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
-								required
+								value={selectedTeacher.name}
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 p-2'
+								disabled
 							/>
 						</div>
 						<div>
 							<label className='block text-sm font-medium text-gray-700'>
-								Email:
+								Mobile
+							</label>
+							<input
+								type='text'
+								value={selectedTeacher.mobile}
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 p-2'
+								disabled
+							/>
+						</div>
+						<div>
+							<label className='block text-sm font-medium text-gray-700'>
+								Email
 							</label>
 							<input
 								type='email'
-								value={editData.email}
-								onChange={(e) =>
-									setEditData({ ...editData, email: e.target.value })
-								}
-								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
-								required
+								value={selectedTeacher.email}
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 p-2'
+								disabled
 							/>
 						</div>
 						<div>
 							<label className='block text-sm font-medium text-gray-700'>
-								Status:
+								Address
+							</label>
+							<input
+								type='text'
+								value={selectedTeacher.residentialAddress.address}
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 p-2'
+								disabled
+							/>
+						</div>
+						<div>
+							<label className='block text-sm font-medium text-gray-700'>
+								City
+							</label>
+							<input
+								type='text'
+								value={selectedTeacher.residentialAddress.city}
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 p-2'
+								disabled
+							/>
+						</div>
+						<div>
+							<label className='block text-sm font-medium text-gray-700'>
+								State
+							</label>
+							<input
+								type='text'
+								value={selectedTeacher.residentialAddress.state}
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 p-2'
+								disabled
+							/>
+						</div>
+						<div>
+							<label className='block text-sm font-medium text-gray-700'>
+								Country
+							</label>
+							<input
+								type='text'
+								value={selectedTeacher.residentialAddress.country}
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 p-2'
+								disabled
+							/>
+						</div>
+						<div>
+							<label className='block text-sm font-medium text-gray-700'>
+								Zip Code
+							</label>
+							<input
+								type='text'
+								value={selectedTeacher.residentialAddress.zipCode || 'N/A'}
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 p-2'
+								disabled
+							/>
+						</div>
+						<div>
+							<label className='block text-sm font-medium text-gray-700'>
+								Qualification
+							</label>
+							<input
+								type='text'
+								value={selectedTeacher.qualification || 'N/A'}
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 p-2'
+								disabled
+							/>
+						</div>
+						<div>
+							<label className='block text-sm font-medium text-gray-700'>
+								Grade-Subjects
+							</label>
+							<input
+								type='text'
+								value={
+									selectedTeacher.gradeSubjects
+										.map(
+											(gs) =>
+												gradeSubjectOptions.find(
+													(opt) => opt.value === gs.gradeSubjectId
+												)?.label || gs.gradeSubjectId
+										)
+										.join(', ') || 'None'
+								}
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 p-2'
+								disabled
+							/>
+						</div>
+						<div>
+							<label className='block text-sm font-medium text-gray-700'>
+								Status
 							</label>
 							<select
-								value={editData.status}
-								onChange={(e) =>
-									setEditData({ ...editData, status: e.target.value })
-								}
-								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'>
+								value={editStatus}
+								onChange={(e) => setEditStatus(e.target.value)}
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2'>
 								<option value='Live'>Live</option>
 								<option value='Archive'>Archive</option>
 							</select>
 						</div>
-						<div className='flex space-x-3'>
+						<div className='flex space-x-4'>
 							<button
 								type='submit'
-								className='bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600'>
-								Update Teacher
+								className='bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600 transition-colors'>
+								Update Status
 							</button>
 							<button
 								type='button'
 								onClick={() => setSelectedTeacher(null)}
-								className='bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600'>
+								className='bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600 transition-colors'>
 								Cancel
 							</button>
 						</div>
