@@ -1,57 +1,41 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GalleryVerticalEnd, Loader2, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Eye, EyeOff, AlertCircle, X, GalleryVerticalEnd } from 'lucide-react';
 import api from '../../lib/axios';
 import { cn } from '../../lib/utils';
-import { Button } from '../ui/Button';
-import { Input } from '../ui/Input';
-import { Label } from '../ui/Label';
-
-const containerVariants = {
-	hidden: { opacity: 0, scale: 0.95 },
-	visible: {
-		opacity: 1,
-		scale: 1,
-		transition: {
-			duration: 0.5,
-			ease: [0.43, 0.13, 0.23, 0.96],
-			staggerChildren: 0.08,
-		},
-	},
-};
-
-const itemVariants = {
-	hidden: { opacity: 0, y: 15 },
-	visible: {
-		opacity: 1,
-		y: 0,
-		transition: { duration: 0.4, ease: [0.43, 0.13, 0.23, 0.96] },
-	},
-};
-
-const errorVariants = {
-	hidden: { opacity: 0, height: 0, marginBottom: 0 },
-	visible: {
-		opacity: 1,
-		height: 'auto',
-		marginBottom: 12,
-		transition: { duration: 0.3, ease: 'easeInOut' },
-	},
-};
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
 
 export function LoginForm({ className }) {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const [error, setError] = useState('');
-	const [loading, setLoading] = useState(false);
+	const [isLoading, setIsLoading] = useState(false);
 	const [showPassword, setShowPassword] = useState(false);
+	const [errorShake, setErrorShake] = useState(false);
 	const navigate = useNavigate();
+
+	// Auto-dismiss error after 5s
+	useEffect(() => {
+		let timer;
+		if (error) {
+			timer = setTimeout(() => setError(''), 5000);
+		}
+		return () => clearTimeout(timer);
+	}, [error]);
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
-		if (!email || !password) return setError('Please fill in all fields');
-		setLoading(true);
+		if (!email || !password) {
+			setError('Please fill in all fields');
+			setErrorShake(true);
+			setTimeout(() => setErrorShake(false), 500);
+			return;
+		}
+
+		setIsLoading(true);
 		setError('');
 
 		try {
@@ -71,116 +55,120 @@ export function LoginForm({ className }) {
 			setError(
 				err.response?.data?.message || 'Login failed. Please try again.'
 			);
+			setErrorShake(true);
+			setTimeout(() => setErrorShake(false), 500);
 		} finally {
-			setLoading(false);
+			setIsLoading(false);
 		}
 	};
 
 	return (
-		<motion.div
-			variants={containerVariants}
-			initial='hidden'
-			animate='visible'
-			className={cn(
-				'flex flex-col items-center gap-4 w-full max-w-md px-6 py-8 bg-white rounded-xl shadow-md border border-gray-100',
-				className
-			)}>
-			<motion.div
-				className='flex flex-col items-center gap-1'
-				variants={itemVariants}>
-				<div className='relative'>
+		<div className='flex items-center justify-center min-h-screen bg-gradient-to-r from-gray-100 to-gray-200 p-4'>
+			<div className='w-full max-w-md'>
+				<motion.div
+					initial={{ opacity: 0, y: 20 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ duration: 0.5, ease: 'easeOut' }}
+					className={cn(
+						'relative overflow-hidden rounded-xl border bg-white shadow-lg p-8',
+						className
+					)}>
+					{/* Branding */}
 					<motion.div
-						className='flex size-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/70 text-white shadow-md'
-						animate={{ scale: loading ? [1, 1.05, 1] : 1 }}
+						className='flex flex-col items-center mb-6'
+						initial={{ opacity: 0, scale: 0.9 }}
+						animate={{ opacity: 1, scale: 1 }}
 						transition={{
-							scale: { duration: 0.6, repeat: loading ? Infinity : 0 },
+							duration: 0.6,
+							ease: [0.22, 1, 0.36, 1],
+							delay: 0.2,
 						}}>
-						<GalleryVerticalEnd className='size-5' />
-					</motion.div>
-				</div>
-				<motion.h1
-					className='text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent mb-0.5'
-					variants={itemVariants}>
-					Mentora
-				</motion.h1>
-				<motion.p
-					variants={itemVariants}
-					className='text-xs text-gray-600 -mt-0.5'>
-					Sign in to continue
-				</motion.p>
-			</motion.div>
-
-			<form onSubmit={handleSubmit} className='w-full space-y-4'>
-				<AnimatePresence>
-					{error && (
 						<motion.div
-							variants={errorVariants}
-							initial='hidden'
-							animate='visible'
-							exit='hidden'
-							className='text-red-600 text-xs bg-red-50 p-2 rounded-lg border border-red-100'>
-							{error}
+							className='flex items-center justify-center p-3 rounded-lg bg-primary/10 text-primary mb-4'
+							whileHover={{ scale: 1.05, rotate: [0, -5, 5, -5, 0] }}
+							transition={{ duration: 0.5 }}>
+							<GalleryVerticalEnd className='h-10 w-10' />
 						</motion.div>
-					)}
-				</AnimatePresence>
+						<h1 className='text-3xl font-semibold text-primary'>Mentora</h1>
+						<p className='text-gray-600 mt-2 text-center'>
+							Sign in to your account to continue
+						</p>
+					</motion.div>
 
-				<motion.div variants={itemVariants} className='space-y-1'>
-					<Label htmlFor='email' className='text-xs font-medium'>
-						Email
-					</Label>
-					<Input
-						id='email'
-						type='email'
-						placeholder='john.doe@gmail.com'
-						value={email}
-						onChange={(e) => setEmail(e.target.value)}
-						required
-						className='bg-gray-50 focus:ring-2 focus:ring-primary/20'
-					/>
-				</motion.div>
-
-				<motion.div variants={itemVariants} className='space-y-1'>
-					<Label htmlFor='password' className='text-xs font-medium'>
-						Password
-					</Label>
-					<div className='relative'>
-						<Input
-							id='password'
-							type={showPassword ? 'text' : 'password'}
-							placeholder='••••••••'
-							value={password}
-							onChange={(e) => setPassword(e.target.value)}
-							required
-							className='bg-gray-50 pr-10 focus:ring-2 focus:ring-primary/20'
-						/>
-						<button
-							type='button'
-							onClick={() => setShowPassword(!showPassword)}
-							className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700'>
-							{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-						</button>
-					</div>
-				</motion.div>
-
-				<motion.div variants={itemVariants}>
-					<Button
-						type='submit'
-						disabled={loading}
-						className={cn(
-							'w-full bg-gradient-to-r from-primary to-primary/80 text-white py-2.5 text-sm font-medium',
-							!loading && 'hover:from-primary/90 hover:to-primary/70',
-							loading && 'opacity-70 cursor-not-allowed'
-						)}>
-						{loading ? (
-							<span className='flex items-center gap-2'>
-								<Loader2 className='animate-spin size-4' /> Logging in...
-							</span>
-						) : (
-							'Sign In'
+					{/* Error Message */}
+					<AnimatePresence>
+						{error && (
+							<motion.div
+								initial={{ opacity: 0, y: -10, height: 0 }}
+								animate={{ opacity: 1, y: 0, height: 'auto' }}
+								exit={{ opacity: 0, height: 0 }}
+								transition={{ duration: 0.2 }}
+								className='mb-6 relative'>
+								<motion.div
+									animate={errorShake ? { x: [0, -10, 10, -10, 10, 0] } : {}}
+									transition={{ duration: 0.4, ease: 'easeInOut' }}
+									className='flex items-start gap-2 p-3 rounded-lg bg-red-100 text-red-600 border border-red-300'>
+									<AlertCircle className='h-5 w-5 flex-shrink-0 mt-0.5' />
+									<span className='text-sm'>{error}</span>
+									<button
+										onClick={() => setError('')}
+										className='ml-auto p-1 rounded-full hover:bg-red-200 transition-colors'>
+										<X className='h-4 w-4' />
+									</button>
+								</motion.div>
+							</motion.div>
 						)}
-					</Button>
+					</AnimatePresence>
+
+					{/* Login Form */}
+					<form onSubmit={handleSubmit} className='space-y-6'>
+						<div className='space-y-2'>
+							<Label htmlFor='email'>Email</Label>
+							<Input
+								id='email'
+								type='email'
+								placeholder='john.doe@gmail.com'
+								value={email}
+								onChange={(e) => setEmail(e.target.value)}
+								required
+								className='h-12 px-4 bg-gray-50 border-gray-300 focus:ring-2 focus:ring-primary transition-all'
+							/>
+						</div>
+
+						<div className='space-y-2'>
+							<Label htmlFor='password'>Password</Label>
+							<div className='relative'>
+								<Input
+									id='password'
+									type={showPassword ? 'text' : 'password'}
+									placeholder='••••••••'
+									value={password}
+									onChange={(e) => setPassword(e.target.value)}
+									required
+									className='h-12 px-4 bg-gray-50 border-gray-300 focus:ring-2 focus:ring-primary pr-10'
+								/>
+								<button
+									type='button'
+									onClick={() => setShowPassword(!showPassword)}
+									className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition'>
+									{showPassword ? (
+										<EyeOff className='h-5 w-5' />
+									) : (
+										<Eye className='h-5 w-5' />
+									)}
+								</button>
+							</div>
+						</div>
+
+						<Button
+							type='submit'
+							className='w-full h-12 bg-primary text-white rounded-lg shadow hover:bg-primary/90 transition-all'
+							disabled={isLoading}>
+							{isLoading ? 'Signing in...' : 'Sign In'}
+						</Button>
+					</form>
 				</motion.div>
-			</form>
-		</motion.div>
+			</div>
+		</div>
 	);
 }

@@ -38,6 +38,7 @@ import ParentDashboard from './pages/parent/Dashboard';
 import ParentChildren from './pages/parent/Children';
 import ParentFeePayment from './pages/parent/FeePayment';
 import Grades from './pages/principal/Grades';
+import HomePage from './pages/HomePage';
 function ProtectedLayout({ children }) {
 	const [role, setRole] = useState(localStorage.getItem('role'));
 	const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -87,6 +88,7 @@ function ProtectedLayout({ children }) {
 function App() {
 	return (
 		<Routes>
+			<Route path='/' element={<HomePage />} />
 			<Route path='/login' element={<Login />} />
 
 			{/* Principal protected routes */}
@@ -304,9 +306,6 @@ function App() {
 					</ProtectedLayout>
 				}
 			/>
-
-			{/* Default fallback */}
-			<Route path='*' element={<Navigate to='/login' replace />} />
 		</Routes>
 	);
 }

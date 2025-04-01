@@ -1,23 +1,23 @@
-import { Button } from '../components/ui/Button';
-import React from 'react';
-import { Link } from 'react-router-dom';
+import HeroSection from '../components/landingPage/heroSection';
+import AboutSection from '../components/landingPage/aboutSection';
+import FeaturesSection from '../components/landingPage/featureSection';
+import TestimonialsSection from '../components/landingPage/testmonialSection';
+import CtaSection from '../components/landingPage/ctaSection';
+import ContactSection from '../components/landingPage/contactSection';
+import Navbar from '../components/landingPage/navbarSection';
+import Footer from '../components/landingPage/footerSection';
 
-const HomePage = () => {
+export default function HomePage() {
 	return (
-		<div className='flex items-center justify-center h-screen bg-gray-50'>
-			<div className='text-center space-y-4'>
-				<h1 className='text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent'>
-					Welcome to Mentora Tution App
-				</h1>
-				<p className='text-gray-600'>
-					Please login to continue managing your dashboard.
-				</p>
-				<Link to={'/login'}>
-					<Button className='px-6 py-2'>Go to Login</Button>
-				</Link>
-			</div>
+		<div className='min-h-screen'>
+			<Navbar />
+			<HeroSection />
+			<AboutSection />
+			<FeaturesSection />
+			<TestimonialsSection />
+			<CtaSection />
+			<ContactSection />
+			<Footer />
 		</div>
 	);
-};
-
-export default HomePage;
+}

@@ -1,9 +1,8 @@
-// components/layout/Navbar.jsx
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { LogOut, Menu } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { Button } from '../ui/Button';
+import { Button } from '../ui/button';
 
 const Navbar = ({ role, toggleSidebar }) => {
 	const [userRole, setUserRole] = useState('');
@@ -12,7 +11,7 @@ const Navbar = ({ role, toggleSidebar }) => {
 
 	useEffect(() => {
 		const storedRole = localStorage.getItem('role');
-		const storedEmail = localStorage.getItem('email'); // Assuming email is stored during login
+		const storedEmail = localStorage.getItem('email');
 		setUserRole(storedRole || 'guest');
 		setUserEmail(storedEmail || 'User');
 	}, []);
