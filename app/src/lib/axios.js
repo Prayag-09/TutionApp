@@ -16,21 +16,23 @@ api.interceptors.request.use((config) => {
 // User Management APIs
 export const getAllTeachers = () => api.get('/users/teachers');
 export const getTeacherById = (id) => api.get(`/users/teachers/${id}`);
-export const createTeacher = (data) => api.post('/users/teachers', data);
+export const createTeacher = (data) =>
+	api.post('/users/register/teacher', data);
 export const deleteTeacher = (id) => api.delete(`/users/teachers/${id}`);
 export const updateTeacherStatus = (id, status) =>
 	api.put(`/users/teacher/${id}/status`, { status });
 
 export const getAllStudents = () => api.get('/users/students');
 export const getStudentById = (id) => api.get(`/users/students/${id}`);
-export const createStudent = (data) => api.post('/users/students', data);
+export const createStudent = (data) =>
+	api.post('/users/register/student', data);
 export const deleteStudent = (id) => api.delete(`/users/students/${id}`);
 export const updateStudentStatus = (id, status) =>
 	api.put(`/users/student/${id}/status`, { status });
 
 export const getAllParents = () => api.get('/users/parents');
 export const getParentById = (id) => api.get(`/users/parents/${id}`);
-export const createParent = (data) => api.post('/users/parents', data);
+export const createParent = (data) => api.post('/users/register/parent', data);
 export const deleteParent = (id) => api.delete(`/users/parents/${id}`);
 
 export const getUserRoles = () => api.get('/users/roles');

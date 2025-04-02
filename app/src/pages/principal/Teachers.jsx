@@ -14,8 +14,8 @@ const Teachers = () => {
 	const [selectedTeacher, setSelectedTeacher] = useState(null);
 	const [editStatus, setEditStatus] = useState('');
 	const [newTeacherData, setNewTeacherData] = useState({
-		teacherName: '',
-		mobileNumber: '',
+		name: '',
+		mobile: '',
 		email: '',
 		password: '',
 		residentialAddress: {
@@ -133,17 +133,17 @@ const Teachers = () => {
 
 			const formattedData = {
 				...newTeacherData,
-				gradeSubjects: newTeacherData.gradeSubjects.map(
-					(option) => option.value
-				), // Extract gradeSubjectIds
+				gradeSubjects: newTeacherData.gradeSubjects.map((option) => ({
+					gradeSubjectId: option.value, // Format as [{ gradeSubjectId: "id" }, ...]
+				})),
 			};
 			const res = await createTeacher(formattedData);
 			if (!res.data.success)
 				throw new Error(res.data.message || 'Failed to add teacher');
 			setTeachers([...teachers, res.data.data]);
 			setNewTeacherData({
-				teacherName: '',
-				mobileNumber: '',
+				name: '',
+				mobile: '',
 				email: '',
 				password: '',
 				residentialAddress: {
@@ -160,6 +160,7 @@ const Teachers = () => {
 			setShowAddForm(false);
 		} catch (err) {
 			setError(err.message || 'Failed to add teacher');
+			console.error('Error details:', err.response?.data); // Log detailed error from backend
 		}
 	};
 
@@ -189,12 +190,9 @@ const Teachers = () => {
 							</label>
 							<input
 								type='text'
-								value={newTeacherData.teacherName}
+								value={newTeacherData.name}
 								onChange={(e) =>
-									setNewTeacherData({
-										...newTeacherData,
-										teacherName: e.target.value,
-									})
+									setNewTeacherData({ ...newTeacherData, name: e.target.value })
 								}
 								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2'
 								required
@@ -206,11 +204,11 @@ const Teachers = () => {
 							</label>
 							<input
 								type='text'
-								value={newTeacherData.mobileNumber}
+								value={newTeacherData.mobile}
 								onChange={(e) =>
 									setNewTeacherData({
 										...newTeacherData,
-										mobileNumber: e.target.value,
+										mobile: e.target.value,
 									})
 								}
 								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2'

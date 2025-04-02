@@ -9,7 +9,7 @@ import {
 	getAllParents,
 	getAllGrades,
 	getAllSubjects,
-	getAllTeachers, // For teacher options in subjects
+	getAllTeachers,
 } from '../../lib/axios';
 
 const Students = () => {
@@ -28,9 +28,9 @@ const Students = () => {
 			country: '',
 			zipCode: '',
 		},
-		parentId: null, // { value, label } object
-		gradeId: null, // { value, label } object
-		subjects: [], // Array of { subjectId: { value, label }, teacherId: { value, label }, status }
+		parentId: null,
+		gradeId: null,
+		subjects: [], 
 		status: 'Live',
 	});
 	const [parentOptions, setParentOptions] = useState([]);
@@ -174,7 +174,7 @@ const Students = () => {
 				subjects: newStudentData.subjects.map((sub) => ({
 					subjectId: sub.subjectId.value,
 					teacherId: sub.teacherId.value,
-					status: 'Live', // Default status for new subjects
+					status: 'Live',
 				})),
 			};
 			const res = await createStudent(formattedData);
