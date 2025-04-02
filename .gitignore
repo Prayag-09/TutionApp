@@ -5,3 +5,4 @@ postman-test
 .github
 dist
 .DS_Store
+package-lock.json
