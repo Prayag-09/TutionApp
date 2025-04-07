@@ -1,4 +1,5 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import e from 'express';
+import mongoose, { Schema } from 'mongoose';
 
 export interface IAssignment extends Document {
 	name: string;
@@ -8,6 +9,7 @@ export interface IAssignment extends Document {
 	file?: string;
 	maximumMark: number;
 	status: 'Live' | 'Archive';
+	dueDate?: Date;
 }
 
 const assignmentSchema = new Schema<IAssignment>(
@@ -23,6 +25,7 @@ const assignmentSchema = new Schema<IAssignment>(
 		file: { type: String, trim: true },
 		maximumMark: { type: Number, required: true },
 		status: { type: String, enum: ['Live', 'Archive'], default: 'Live' },
+		dueDate: { type: Date }, // <-- New field
 	},
 	{ timestamps: true }
 );

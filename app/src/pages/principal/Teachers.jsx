@@ -7,17 +7,19 @@ import {
 	deleteTeacher,
 	updateTeacherStatus,
 	getAllGradeSubjects,
+	updateTeacher, // New API method for editing teacher details
 } from '../../lib/axios';
 
 const Teachers = () => {
 	const [teachers, setTeachers] = useState([]);
 	const [selectedTeacher, setSelectedTeacher] = useState(null);
-	const [editStatus, setEditStatus] = useState('');
+	const [editMode, setEditMode] = useState(false); // Track if in edit mode
 	const [newTeacherData, setNewTeacherData] = useState({
 		name: '',
 		mobile: '',
 		email: '',
 		password: '',
+		confirmPassword: '', // Added confirmPassword
 		residentialAddress: {
 			address: '',
 			city: '',
@@ -27,8 +29,9 @@ const Teachers = () => {
 		},
 		qualification: '',
 		status: 'Live',
-		gradeSubjects: [], // Array of { value, label } objects from react-select
+		gradeSubjects: [],
 	});
+	const [editTeacherData, setEditTeacherData] = useState(null); // For editing existing teacher
 	const [gradeSubjectOptions, setGradeSubjectOptions] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
@@ -44,44 +47,48 @@ const Teachers = () => {
 					getAllGradeSubjects(),
 				]);
 
-				if (!teachersRes.data.success) {
+				if (!teachersRes.data.success)
 					throw new Error(
 						teachersRes.data.message || 'Failed to fetch teachers'
 					);
-				}
-				if (!gradeSubjectsRes.data.success) {
+				if (!gradeSubjectsRes.data.success)
 					throw new Error(
 						gradeSubjectsRes.data.message || 'Failed to fetch grade-subjects'
 					);
-				}
 
 				setTeachers(teachersRes.data.data);
-
-				// Format grade-subject options for react-select
-				const options = gradeSubjectsRes.data.data.map((gs) => ({
-					value: gs._id, // gradeSubjectId
-					label: `${gs.gradeId.name} - ${gs.subjectId.name}`, // e.g., "Grade 1 - Mathematics"
-				}));
-				setGradeSubjectOptions(options);
+				setGradeSubjectOptions(
+					gradeSubjectsRes.data.data.map((gs) => ({
+						value: gs._id,
+						label: `${gs.gradeId.name} - ${gs.subjectId.name}`,
+					}))
+				);
 			} catch (err) {
 				setError(err.message || 'Failed to load data');
 			} finally {
 				setLoading(false);
 			}
 		};
-
 		fetchData();
 	}, []);
 
-	// View teacher details and set status for editing
-	const handleViewDetails = async (id) => {
+	// View/edit teacher details
+	const handleViewDetails = async (id, isEdit = false) => {
 		try {
 			const res = await getTeacherById(id);
 			if (!res.data.success)
 				throw new Error(res.data.message || 'Failed to fetch teacher');
 			const teacher = res.data.data;
 			setSelectedTeacher(teacher);
-			setEditStatus(teacher.status);
+			if (isEdit) {
+				setEditMode(true);
+				setEditTeacherData({
+					...teacher,
+					gradeSubjects: teacher.gradeSubjects.map((gs) =>
+						gradeSubjectOptions.find((opt) => opt.value === gs.gradeSubjectId)
+					),
+				});
+			}
 		} catch (err) {
 			setError(err.message || 'Failed to load teacher details');
 		}
@@ -91,7 +98,7 @@ const Teachers = () => {
 	const handleUpdateStatus = async (e, id) => {
 		e.preventDefault();
 		try {
-			const res = await updateTeacherStatus(id, editStatus);
+			const res = await updateTeacherStatus(id, editTeacherData.status);
 			if (!res.data.success)
 				throw new Error(res.data.message || 'Failed to update teacher status');
 			setTeachers(
@@ -102,9 +109,36 @@ const Teachers = () => {
 				)
 			);
 			setSelectedTeacher(null);
-			setEditStatus('');
+			setEditMode(false);
 		} catch (err) {
 			setError(err.message || 'Failed to update teacher status');
+		}
+	};
+
+	// Update teacher details
+	const handleUpdateTeacher = async (e) => {
+		e.preventDefault();
+		try {
+			const formattedData = {
+				...editTeacherData,
+				gradeSubjects: editTeacherData.gradeSubjects.map((option) => ({
+					gradeSubjectId: option.value,
+				})),
+			};
+			const res = await updateTeacher(selectedTeacher._id, formattedData);
+			if (!res.data.success)
+				throw new Error(res.data.message || 'Failed to update teacher');
+			setTeachers(
+				teachers.map((teacher) =>
+					teacher._id === selectedTeacher._id ? res.data.data : teacher
+				)
+			);
+			setSelectedTeacher(null);
+			setEditMode(false);
+			setEditTeacherData(null);
+			setError(null);
+		} catch (err) {
+			setError(err.message || 'Failed to update teacher');
 		}
 	};
 
@@ -127,6 +161,9 @@ const Teachers = () => {
 	const handleAdd = async (e) => {
 		e.preventDefault();
 		try {
+			if (newTeacherData.password !== newTeacherData.confirmPassword) {
+				throw new Error('Passwords do not match');
+			}
 			if (!newTeacherData.gradeSubjects.length) {
 				throw new Error('At least one grade-subject is required');
 			}
@@ -134,7 +171,7 @@ const Teachers = () => {
 			const formattedData = {
 				...newTeacherData,
 				gradeSubjects: newTeacherData.gradeSubjects.map((option) => ({
-					gradeSubjectId: option.value, // Format as [{ gradeSubjectId: "id" }, ...]
+					gradeSubjectId: option.value,
 				})),
 			};
 			const res = await createTeacher(formattedData);
@@ -146,6 +183,7 @@ const Teachers = () => {
 				mobile: '',
 				email: '',
 				password: '',
+				confirmPassword: '',
 				residentialAddress: {
 					address: '',
 					city: '',
@@ -158,9 +196,9 @@ const Teachers = () => {
 				gradeSubjects: [],
 			});
 			setShowAddForm(false);
+			setError(null);
 		} catch (err) {
 			setError(err.message || 'Failed to add teacher');
-			console.error('Error details:', err.response?.data); // Log detailed error from backend
 		}
 	};
 
@@ -171,11 +209,13 @@ const Teachers = () => {
 	return (
 		<div className='container mx-auto p-4'>
 			<h1 className='text-3xl font-bold mb-6 text-gray-800'>Manage Teachers</h1>
-			<button
-				onClick={() => setShowAddForm(!showAddForm)}
-				className='bg-blue-500 text-white px-6 py-2 rounded mb-6 hover:bg-blue-600 transition-colors'>
-				{showAddForm ? 'Cancel' : 'Add Teacher'}
-			</button>
+			{!selectedTeacher && !showAddForm && (
+				<button
+					onClick={() => setShowAddForm(true)}
+					className='bg-blue-500 text-white px-6 py-2 rounded mb-6 hover:bg-blue-600 transition-colors'>
+					Add Teacher
+				</button>
+			)}
 
 			{/* Add Teacher Form */}
 			{showAddForm && (
@@ -244,6 +284,23 @@ const Teachers = () => {
 									setNewTeacherData({
 										...newTeacherData,
 										password: e.target.value,
+									})
+								}
+								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2'
+								required
+							/>
+						</div>
+						<div>
+							<label className='block text-sm font-medium text-gray-700'>
+								Confirm Password *
+							</label>
+							<input
+								type='password'
+								value={newTeacherData.confirmPassword}
+								onChange={(e) =>
+									setNewTeacherData({
+										...newTeacherData,
+										confirmPassword: e.target.value,
 									})
 								}
 								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2'
@@ -401,70 +458,35 @@ const Teachers = () => {
 								placeholder='Select grade-subjects...'
 							/>
 						</div>
-						<button
-							type='submit'
-							className='bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600 transition-colors'>
-							Add Teacher
-						</button>
+						<div className='flex space-x-4'>
+							<button
+								type='submit'
+								className='bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600 transition-colors'>
+								Add Teacher
+							</button>
+							<button
+								type='button'
+								onClick={() => setShowAddForm(false)}
+								className='bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600 transition-colors'>
+								Cancel
+							</button>
+						</div>
 					</form>
 				</div>
 			)}
 
-			{/* Teachers Table */}
-			<div className='bg-white p-6 rounded-lg shadow-lg'>
-				<table className='min-w-full border-collapse'>
-					<thead>
-						<tr className='bg-gray-200'>
-							<th className='border px-6 py-3 text-left text-gray-700'>Name</th>
-							<th className='border px-6 py-3 text-left text-gray-700'>
-								Email
-							</th>
-							<th className='border px-6 py-3 text-left text-gray-700'>
-								Mobile
-							</th>
-							<th className='border px-6 py-3 text-left text-gray-700'>
-								Status
-							</th>
-							<th className='border px-6 py-3 text-left text-gray-700'>
-								Actions
-							</th>
-						</tr>
-					</thead>
-					<tbody>
-						{teachers.map((teacher) => (
-							<tr
-								key={teacher._id}
-								className='hover:bg-gray-50 transition-colors'>
-								<td className='border px-6 py-3'>{teacher.name}</td>
-								<td className='border px-6 py-3'>{teacher.email}</td>
-								<td className='border px-6 py-3'>{teacher.mobile}</td>
-								<td className='border px-6 py-3'>{teacher.status}</td>
-								<td className='border px-6 py-3 space-x-2'>
-									<button
-										onClick={() => handleViewDetails(teacher._id)}
-										className='bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors'>
-										Edit Status
-									</button>
-									<button
-										onClick={() => handleDelete(teacher._id)}
-										className='bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors'>
-										Delete
-									</button>
-								</td>
-							</tr>
-						))}
-					</tbody>
-				</table>
-			</div>
-
-			{/* Edit Teacher Status Form */}
+			{/* Edit Teacher Form (Moved to Top) */}
 			{selectedTeacher && (
-				<div className='mt-8 bg-white p-6 rounded-lg shadow-lg'>
+				<div className='mb-8 bg-white p-6 rounded-lg shadow-lg'>
 					<h2 className='text-2xl font-semibold mb-4 text-gray-800'>
-						Edit Teacher Status
+						{editMode ? 'Edit Teacher Details' : 'Edit Teacher Status'}
 					</h2>
 					<form
-						onSubmit={(e) => handleUpdateStatus(e, selectedTeacher._id)}
+						onSubmit={
+							editMode
+								? handleUpdateTeacher
+								: (e) => handleUpdateStatus(e, selectedTeacher._id)
+						}
 						className='space-y-6'>
 						<div>
 							<label className='block text-sm font-medium text-gray-700'>
@@ -472,9 +494,20 @@ const Teachers = () => {
 							</label>
 							<input
 								type='text'
-								value={selectedTeacher.name}
-								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 p-2'
-								disabled
+								value={editMode ? editTeacherData.name : selectedTeacher.name}
+								onChange={(e) =>
+									editMode &&
+									setEditTeacherData({
+										...editTeacherData,
+										name: e.target.value,
+									})
+								}
+								className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 ${
+									editMode
+										? 'focus:ring-blue-500 focus:border-blue-500'
+										: 'bg-gray-100'
+								}`}
+								disabled={!editMode}
 							/>
 						</div>
 						<div>
@@ -483,9 +516,22 @@ const Teachers = () => {
 							</label>
 							<input
 								type='text'
-								value={selectedTeacher.mobile}
-								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 p-2'
-								disabled
+								value={
+									editMode ? editTeacherData.mobile : selectedTeacher.mobile
+								}
+								onChange={(e) =>
+									editMode &&
+									setEditTeacherData({
+										...editTeacherData,
+										mobile: e.target.value,
+									})
+								}
+								className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 ${
+									editMode
+										? 'focus:ring-blue-500 focus:border-blue-500'
+										: 'bg-gray-100'
+								}`}
+								disabled={!editMode}
 							/>
 						</div>
 						<div>
@@ -494,9 +540,20 @@ const Teachers = () => {
 							</label>
 							<input
 								type='email'
-								value={selectedTeacher.email}
-								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 p-2'
-								disabled
+								value={editMode ? editTeacherData.email : selectedTeacher.email}
+								onChange={(e) =>
+									editMode &&
+									setEditTeacherData({
+										...editTeacherData,
+										email: e.target.value,
+									})
+								}
+								className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 ${
+									editMode
+										? 'focus:ring-blue-500 focus:border-blue-500'
+										: 'bg-gray-100'
+								}`}
+								disabled={!editMode}
 							/>
 						</div>
 						<div>
@@ -505,9 +562,27 @@ const Teachers = () => {
 							</label>
 							<input
 								type='text'
-								value={selectedTeacher.residentialAddress.address}
-								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 p-2'
-								disabled
+								value={
+									editMode
+										? editTeacherData.residentialAddress.address
+										: selectedTeacher.residentialAddress.address
+								}
+								onChange={(e) =>
+									editMode &&
+									setEditTeacherData({
+										...editTeacherData,
+										residentialAddress: {
+											...editTeacherData.residentialAddress,
+											address: e.target.value,
+										},
+									})
+								}
+								className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 ${
+									editMode
+										? 'focus:ring-blue-500 focus:border-blue-500'
+										: 'bg-gray-100'
+								}`}
+								disabled={!editMode}
 							/>
 						</div>
 						<div>
@@ -516,9 +591,27 @@ const Teachers = () => {
 							</label>
 							<input
 								type='text'
-								value={selectedTeacher.residentialAddress.city}
-								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 p-2'
-								disabled
+								value={
+									editMode
+										? editTeacherData.residentialAddress.city
+										: selectedTeacher.residentialAddress.city
+								}
+								onChange={(e) =>
+									editMode &&
+									setEditTeacherData({
+										...editTeacherData,
+										residentialAddress: {
+											...editTeacherData.residentialAddress,
+											city: e.target.value,
+										},
+									})
+								}
+								className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 ${
+									editMode
+										? 'focus:ring-blue-500 focus:border-blue-500'
+										: 'bg-gray-100'
+								}`}
+								disabled={!editMode}
 							/>
 						</div>
 						<div>
@@ -527,9 +620,27 @@ const Teachers = () => {
 							</label>
 							<input
 								type='text'
-								value={selectedTeacher.residentialAddress.state}
-								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 p-2'
-								disabled
+								value={
+									editMode
+										? editTeacherData.residentialAddress.state
+										: selectedTeacher.residentialAddress.state
+								}
+								onChange={(e) =>
+									editMode &&
+									setEditTeacherData({
+										...editTeacherData,
+										residentialAddress: {
+											...editTeacherData.residentialAddress,
+											state: e.target.value,
+										},
+									})
+								}
+								className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 ${
+									editMode
+										? 'focus:ring-blue-500 focus:border-blue-500'
+										: 'bg-gray-100'
+								}`}
+								disabled={!editMode}
 							/>
 						</div>
 						<div>
@@ -538,9 +649,27 @@ const Teachers = () => {
 							</label>
 							<input
 								type='text'
-								value={selectedTeacher.residentialAddress.country}
-								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 p-2'
-								disabled
+								value={
+									editMode
+										? editTeacherData.residentialAddress.country
+										: selectedTeacher.residentialAddress.country
+								}
+								onChange={(e) =>
+									editMode &&
+									setEditTeacherData({
+										...editTeacherData,
+										residentialAddress: {
+											...editTeacherData.residentialAddress,
+											country: e.target.value,
+										},
+									})
+								}
+								className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 ${
+									editMode
+										? 'focus:ring-blue-500 focus:border-blue-500'
+										: 'bg-gray-100'
+								}`}
+								disabled={!editMode}
 							/>
 						</div>
 						<div>
@@ -549,9 +678,27 @@ const Teachers = () => {
 							</label>
 							<input
 								type='text'
-								value={selectedTeacher.residentialAddress.zipCode || 'N/A'}
-								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 p-2'
-								disabled
+								value={
+									editMode
+										? editTeacherData.residentialAddress.zipCode || ''
+										: selectedTeacher.residentialAddress.zipCode || 'N/A'
+								}
+								onChange={(e) =>
+									editMode &&
+									setEditTeacherData({
+										...editTeacherData,
+										residentialAddress: {
+											...editTeacherData.residentialAddress,
+											zipCode: e.target.value,
+										},
+									})
+								}
+								className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 ${
+									editMode
+										? 'focus:ring-blue-500 focus:border-blue-500'
+										: 'bg-gray-100'
+								}`}
+								disabled={!editMode}
 							/>
 						</div>
 						<div>
@@ -560,38 +707,83 @@ const Teachers = () => {
 							</label>
 							<input
 								type='text'
-								value={selectedTeacher.qualification || 'N/A'}
-								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 p-2'
-								disabled
+								value={
+									editMode
+										? editTeacherData.qualification || ''
+										: selectedTeacher.qualification || 'N/A'
+								}
+								onChange={(e) =>
+									editMode &&
+									setEditTeacherData({
+										...editTeacherData,
+										qualification: e.target.value,
+									})
+								}
+								className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 ${
+									editMode
+										? 'focus:ring-blue-500 focus:border-blue-500'
+										: 'bg-gray-100'
+								}`}
+								disabled={!editMode}
 							/>
 						</div>
 						<div>
 							<label className='block text-sm font-medium text-gray-700'>
 								Grade-Subjects
 							</label>
-							<input
-								type='text'
-								value={
-									selectedTeacher.gradeSubjects
-										.map(
-											(gs) =>
-												gradeSubjectOptions.find(
-													(opt) => opt.value === gs.gradeSubjectId
-												)?.label || gs.gradeSubjectId
-										)
-										.join(', ') || 'None'
-								}
-								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 p-2'
-								disabled
-							/>
+							{editMode ? (
+								<Select
+									isMulti
+									options={gradeSubjectOptions}
+									value={editTeacherData.gradeSubjects}
+									onChange={(selectedOptions) =>
+										setEditTeacherData({
+											...editTeacherData,
+											gradeSubjects: selectedOptions || [],
+										})
+									}
+									className='mt-1'
+									placeholder='Select grade-subjects...'
+								/>
+							) : (
+								<input
+									type='text'
+									value={
+										selectedTeacher.gradeSubjects
+											.map(
+												(gs) =>
+													gradeSubjectOptions.find(
+														(opt) => opt.value === gs.gradeSubjectId
+													)?.label || gs.gradeSubjectId
+											)
+											.join(', ') || 'None'
+									}
+									className='mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 p-2'
+									disabled
+								/>
+							)}
 						</div>
 						<div>
 							<label className='block text-sm font-medium text-gray-700'>
 								Status
 							</label>
 							<select
-								value={editStatus}
-								onChange={(e) => setEditStatus(e.target.value)}
+								value={
+									editMode
+										? editTeacherData.status
+										: editTeacherData?.status || selectedTeacher.status
+								}
+								onChange={(e) =>
+									editMode
+										? setEditTeacherData({
+												...editTeacherData,
+												status: e.target.value,
+										  })
+										: setEditTeacherData({
+												...editTeacherData,
+												status: e.target.value,
+										  })
+								}
 								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2'>
 								<option value='Live'>Live</option>
 								<option value='Archive'>Archive</option>
@@ -601,16 +793,76 @@ const Teachers = () => {
 							<button
 								type='submit'
 								className='bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600 transition-colors'>
-								Update Status
+								{editMode ? 'Update Teacher' : 'Update Status'}
 							</button>
 							<button
 								type='button'
-								onClick={() => setSelectedTeacher(null)}
+								onClick={() => {
+									setSelectedTeacher(null);
+									setEditMode(false);
+									setEditTeacherData(null);
+								}}
 								className='bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600 transition-colors'>
 								Cancel
 							</button>
 						</div>
 					</form>
+				</div>
+			)}
+
+			{/* Teachers Table (Hidden when editing or adding) */}
+			{!selectedTeacher && !showAddForm && (
+				<div className='bg-white p-6 rounded-lg shadow-lg'>
+					<table className='min-w-full border-collapse'>
+						<thead>
+							<tr className='bg-gray-200'>
+								<th className='border px-6 py-3 text-left text-gray-700'>
+									Name
+								</th>
+								<th className='border px-6 py-3 text-left text-gray-700'>
+									Email
+								</th>
+								<th className='border px-6 py-3 text-left text-gray-700'>
+									Mobile
+								</th>
+								<th className='border px-6 py-3 text-left text-gray-700'>
+									Status
+								</th>
+								<th className='border px-6 py-3 text-left text-gray-700'>
+									Actions
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							{teachers.map((teacher) => (
+								<tr
+									key={teacher._id}
+									className='hover:bg-gray-50 transition-colors'>
+									<td className='border px-6 py-3'>{teacher.name}</td>
+									<td className='border px-6 py-3'>{teacher.email}</td>
+									<td className='border px-6 py-3'>{teacher.mobile}</td>
+									<td className='border px-6 py-3'>{teacher.status}</td>
+									<td className='border px-6 py-3 space-x-2'>
+										<button
+											onClick={() => handleViewDetails(teacher._id, false)}
+											className='bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors'>
+											Edit Status
+										</button>
+										<button
+											onClick={() => handleViewDetails(teacher._id, true)}
+											className='bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition-colors'>
+											Edit Details
+										</button>
+										<button
+											onClick={() => handleDelete(teacher._id)}
+											className='bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors'>
+											Delete
+										</button>
+									</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
 				</div>
 			)}
 		</div>

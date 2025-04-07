@@ -1,4 +1,3 @@
-// components/layout/Sidebar.jsx
 import { NavLink } from 'react-router-dom';
 import { cn } from '../../lib/utils';
 import {
@@ -11,8 +10,8 @@ import {
 	Lock,
 	FileCheck,
 	FileQuestion,
-	User,
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const routesByRole = {
 	principal: [
@@ -69,15 +68,13 @@ const routesByRole = {
 };
 
 const Sidebar = ({ role }) => {
-	const routes = routesByRole[role] || [];
-
 	return (
-		<aside className='w-64 bg-white border-r shadow-md h-screen sticky top-0 lg:block hidden'>
-			<div className='p-6 text-2xl font-bold border-b bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent'>
+		<aside className='w-64 bg-white border-r shadow-sm h-screen sticky top-0 hidden lg:block'>
+			<div className='p-5 text-xl font-bold border-b bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent'>
 				Mentora
 			</div>
-			<nav className='p-4 flex flex-col gap-2'>
-				{routes.map((route) => {
+			<nav className='p-2 flex flex-col gap-1'>
+				{routesByRole[role]?.map((route) => {
 					const Icon = route.icon;
 					return (
 						<NavLink
@@ -85,13 +82,13 @@ const Sidebar = ({ role }) => {
 							to={route.path}
 							className={({ isActive }) =>
 								cn(
-									'flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors',
-									isActive
-										? 'bg-primary/10 text-primary font-medium'
-										: 'text-gray-700'
+									'flex items-center gap-3 px-3 py-2.5 rounded-md mx-2 transition-colors',
+									'text-sm text-gray-700 hover:bg-primary/10 hover:text-primary',
+									isActive && 'bg-primary/10 text-primary font-medium'
 								)
 							}>
-							<Icon className='size-5' /> {route.label}
+							<Icon className='size-4.5 flex-shrink-0' />
+							<span className='truncate'>{route.label}</span>
 						</NavLink>
 					);
 				})}

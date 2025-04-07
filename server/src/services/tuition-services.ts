@@ -46,6 +46,7 @@ interface AssignmentData {
 	file?: string;
 	maximumMark: number;
 	status?: 'Live' | 'Archive';
+	dueDate: Date;
 }
 
 interface QuizData {

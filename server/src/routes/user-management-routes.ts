@@ -20,6 +20,7 @@ import {
 	editStudent,
 	editParent,
 	updateUserStatusController,
+	updateTeacherController,
 } from '../controllers/user-management-controller';
 import {
 	parentValidator,
@@ -277,6 +278,26 @@ router.put(
 			success: true,
 			message: `Parent successfully marked as ${status}`,
 			data: updatedParent,
+		});
+	})
+);
+
+// Update Teacher
+router.put(
+	'/teachers/:id',
+	authenticate,
+	authorize(['principal']),
+	asyncHandler(async (req: Request, res: Response) => {
+		const teacherId = req.params.id;
+		const teacherData = req.body;
+		const updatedTeacher = await updateTeacherController(
+			teacherId,
+			teacherData
+		);
+		res.status(200).json({
+			success: true,
+			message: 'Successfully updated the teacher',
+			data: updatedTeacher,
 		});
 	})
 );

@@ -21,6 +21,8 @@ export const createTeacher = (data) =>
 export const deleteTeacher = (id) => api.delete(`/users/teachers/${id}`);
 export const updateTeacherStatus = (id, status) =>
 	api.put(`/users/teacher/${id}/status`, { status });
+export const updateTeacher = (id, data) =>
+	api.put(`/users/teachers/${id}`, data);
 
 export const getAllStudents = () => api.get('/users/students');
 export const getStudentById = (id) => api.get(`/users/students/${id}`);

@@ -222,6 +222,18 @@ export const updateUserStatusController = async (
 		throw new Error(error.message);
 	}
 };
+// Update Teacher Status
+export const updateTeacherController = async (
+	teacherId: string,
+	teacherData: any
+) => {
+	try {
+		const updatedTeacher = await updateTeacherService(teacherId, teacherData);
+		return updatedTeacher;
+	} catch (error: any) {
+		throw new Error(error.message);
+	}
+};
 
 /**
  * Get user roles
