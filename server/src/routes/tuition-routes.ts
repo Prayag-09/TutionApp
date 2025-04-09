@@ -44,6 +44,56 @@ import {
 	getAllNotesController,
 	getNoteByIdController,
 } from '../controllers/tuition-controller';
+import multer from 'multer';
+import fs from 'fs';
+import path from 'path';
+
+const uploadDir = path.join(__dirname, '../../uploads');
+if (!fs.existsSync(uploadDir)) {
+	fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const sanitizeFileName = (filename: string) => {
+	return filename
+		.toLowerCase()
+		.replace(/\s+/g, '-')
+		.replace(/[^a-z0-9.\-]/g, '')
+		.slice(0, 100);
+};
+
+const storage = multer.diskStorage({
+	destination: (_req, _file, cb) => {
+		cb(null, uploadDir);
+	},
+	filename: (_req: Request, file, cb) => {
+		const timestamp = Date.now();
+		const cleanName = sanitizeFileName(file.originalname);
+		cb(null, `${file.fieldname}-${timestamp}-${cleanName}`);
+	},
+});
+
+const fileFilter = (
+	_req: Request,
+	file: Express.Multer.File,
+	cb: multer.FileFilterCallback
+) => {
+	const allowedTypes = [
+		'application/pdf',
+		'application/msword',
+		'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+	];
+	if (allowedTypes.includes(file.mimetype)) {
+		cb(null, true);
+	} else {
+		cb(new Error('Only PDF or DOCX files are allowed'));
+	}
+};
+
+export const upload = multer({
+	storage,
+	fileFilter,
+	limits: { fileSize: 10 * 1024 * 1024 }, // 10MB file limit
+});
 
 const router = express.Router();
 
@@ -326,11 +376,16 @@ router.put(
 
 // --- Assignments ---
 router.post(
-	'/assignments',
+	'/assignments/add',
 	authenticate,
-	authorize(['teacher']),
+	authorize(['principal', 'teacher']),
+	upload.single('detailsFile'),
 	asyncHandler(async (req: Request, res: Response) => {
-		const response = await addAssignmentController(req.body);
+		const assignmentData = {
+			...req.body,
+			detailsFile: req.file ? req.file.path : undefined,
+		};
+		const response = await addAssignmentController(assignmentData);
 		res.status(response.success ? 201 : 500).json(response);
 	})
 );
@@ -358,9 +413,17 @@ router.get(
 router.put(
 	'/assignments/:id',
 	authenticate,
-	authorize(['teacher']),
+	authorize(['principal', 'teacher']),
+	upload.single('detailsFile'),
 	asyncHandler(async (req: Request, res: Response) => {
-		const response = await updateAssignmentController(req.params.id, req.body);
+		const assignmentData = {
+			...req.body,
+			detailsFile: req.file ? req.file.path : undefined,
+		};
+		const response = await updateAssignmentController(
+			req.params.id,
+			assignmentData
+		);
 		res.status(response.success ? 200 : 500).json(response);
 	})
 );
@@ -368,7 +431,7 @@ router.put(
 router.delete(
 	'/assignments/:id',
 	authenticate,
-	authorize(['teacher']),
+	authorize(['principal', 'teacher']),
 	asyncHandler(async (req: Request, res: Response) => {
 		const response = await deleteAssignmentController(req.params.id);
 		res.status(response.success ? 200 : 500).json(response);

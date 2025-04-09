@@ -21,17 +21,24 @@ import {
 	createAssignment,
 	updateAssignment,
 	deleteAssignment,
+	getAllTeachers,
+	getAllGradeSubjects,
 } from '../../lib/axios';
 
 const Assignments = () => {
 	const [assignments, setAssignments] = useState([]);
+	const [teachers, setTeachers] = useState([]);
+	const [gradeSubjects, setGradeSubjects] = useState([]);
 	const [selectedAssignment, setSelectedAssignment] = useState(null);
 	const [editData, setEditData] = useState({
 		name: '',
+		gradeSubjectId: '',
+		teacherId: '',
 		details: '',
 		dueDate: '',
 		maximumMark: '',
 		status: 'Live',
+		detailsFile: null,
 	});
 	const [newAssignmentData, setNewAssignmentData] = useState({
 		name: '',
@@ -40,32 +47,38 @@ const Assignments = () => {
 		details: '',
 		maximumMark: '',
 		status: 'Live',
+		detailsFile: null,
 	});
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
 	const [showAddForm, setShowAddForm] = useState(false);
 	const [expandedRows, setExpandedRows] = useState({});
 
-	// Fetch all assignments
 	useEffect(() => {
-		const fetchAssignments = async () => {
+		const fetchData = async () => {
 			try {
 				setLoading(true);
-				const res = await getAllAssignments();
-				setAssignments(res.data.data);
+				const [assignmentsRes, teachersRes, gradeSubjectsRes] =
+					await Promise.all([
+						getAllAssignments(),
+						getAllTeachers(),
+						getAllGradeSubjects(),
+					]);
+				setAssignments(assignmentsRes.data.data);
+				setTeachers(teachersRes.data.data);
+				setGradeSubjects(gradeSubjectsRes.data.data);
 				setError(null);
 			} catch (err) {
-				setError('Failed to load assignments. Please try again later.');
-				console.error('Error fetching assignments:', err);
+				setError('Failed to load data. Please try again later.');
+				console.error('Error fetching data:', err);
 			} finally {
 				setLoading(false);
 			}
 		};
 
-		fetchAssignments();
+		fetchData();
 	}, []);
 
-	// Toggle row expansion
 	const toggleRowExpand = (id) => {
 		setExpandedRows((prev) => ({
 			...prev,
@@ -73,24 +86,83 @@ const Assignments = () => {
 		}));
 	};
 
-	// View/Edit assignment details
 	const handleViewDetails = (assignment) => {
 		setSelectedAssignment(assignment);
 		setEditData({
 			name: assignment.name,
-			details: assignment.details,
+			gradeSubjectId:
+				assignment.gradeSubjectId?._id || assignment.gradeSubjectId || '',
+			teacherId: assignment.teacherId?._id || assignment.teacherId || '',
+			details: assignment.details || '',
 			dueDate: assignment.dueDate
 				? new Date(assignment.dueDate).toISOString().split('T')[0]
 				: '',
 			maximumMark: assignment.maximumMark,
 			status: assignment.status || 'Live',
+			detailsFile: null,
 		});
+	};
+
+	const handleAdd = async (e) => {
+		e.preventDefault();
+		try {
+			const formData = new FormData();
+			formData.append('name', newAssignmentData.name);
+			formData.append('gradeSubjectId', newAssignmentData.gradeSubjectId);
+			formData.append('teacherId', newAssignmentData.teacherId);
+			formData.append('details', newAssignmentData.details);
+			formData.append('maximumMark', newAssignmentData.maximumMark);
+			formData.append('status', newAssignmentData.status);
+			if (newAssignmentData.dueDate) {
+				formData.append('dueDate', newAssignmentData.dueDate);
+			}
+			if (newAssignmentData.detailsFile) {
+				formData.append('detailsFile', newAssignmentData.detailsFile);
+			}
+
+			const res = await createAssignment(formData);
+			if (!res.data.success) {
+				throw new Error(res.data.message || 'Failed to add assignment');
+			}
+			setAssignments([...assignments, res.data.data]);
+			setNewAssignmentData({
+				name: '',
+				gradeSubjectId: '',
+				teacherId: '',
+				details: '',
+				maximumMark: '',
+				status: 'Live',
+				detailsFile: null,
+			});
+			setShowAddForm(false);
+			setError(null);
+		} catch (err) {
+			setError(err.message || 'Failed to add assignment. Please try again.');
+			console.error('Error adding assignment:', err);
+		}
 	};
 
 	// Update assignment
 	const handleUpdate = async (id) => {
 		try {
-			const res = await updateAssignment(id, editData);
+			const formData = new FormData();
+			formData.append('name', editData.name);
+			formData.append('gradeSubjectId', editData.gradeSubjectId);
+			formData.append('teacherId', editData.teacherId);
+			formData.append('details', editData.details);
+			if (editData.dueDate) {
+				formData.append('dueDate', editData.dueDate);
+			}
+			formData.append('maximumMark', editData.maximumMark);
+			formData.append('status', editData.status);
+			if (editData.detailsFile) {
+				formData.append('detailsFile', editData.detailsFile);
+			}
+
+			const res = await updateAssignment(id, formData);
+			if (!res.data.success) {
+				throw new Error(res.data.message || 'Failed to update assignment');
+			}
 			setAssignments(
 				assignments.map((assignment) =>
 					assignment._id === id ? res.data.data : assignment
@@ -99,13 +171,18 @@ const Assignments = () => {
 			setSelectedAssignment(null);
 			setEditData({
 				name: '',
+				gradeSubjectId: '',
+				teacherId: '',
 				details: '',
 				dueDate: '',
 				maximumMark: '',
 				status: 'Live',
+				detailsFile: null,
 			});
+			setError(null);
 		} catch (err) {
-			setError('Failed to update assignment. Please try again.');
+			setError(err.message || 'Failed to update assignment. Please try again.');
+			console.error('Error updating assignment:', err);
 		}
 	};
 
@@ -124,27 +201,6 @@ const Assignments = () => {
 		}
 	};
 
-	// Add new assignment
-	const handleAdd = async (e) => {
-		e.preventDefault();
-		try {
-			const res = await createAssignment(newAssignmentData);
-			setAssignments([...assignments, res.data.data]);
-			setNewAssignmentData({
-				name: '',
-				gradeSubjectId: '',
-				teacherId: '',
-				details: '',
-				maximumMark: '',
-				status: 'Live',
-			});
-			setShowAddForm(false);
-		} catch (err) {
-			setError('Failed to add assignment. Please try again.');
-		}
-	};
-
-	// Status badge component
 	const StatusBadge = ({ status }) => {
 		const statusMap = {
 			Live: { color: 'bg-green-100 text-green-800', text: 'Live' },
@@ -161,7 +217,6 @@ const Assignments = () => {
 		);
 	};
 
-	// Format date for display
 	const formatDate = (dateString) => {
 		if (!dateString) return 'No due date';
 		const options = { year: 'numeric', month: 'short', day: 'numeric' };
@@ -172,7 +227,7 @@ const Assignments = () => {
 		return (
 			<div className='flex flex-col items-center justify-center min-h-[50vh]'>
 				<Loader2 className='h-12 w-12 animate-spin text-indigo-600' />
-				<p className='mt-4 text-lg text-gray-600'>Loading assignments...</p>
+				<p className='mt-4 text-lg text-gray-600'>Loading data...</p>
 			</div>
 		);
 	}
@@ -248,7 +303,10 @@ const Assignments = () => {
 							<BookOpen className='h-5 w-5 mr-2 text-indigo-600' />
 							Create New Assignment
 						</h2>
-						<form onSubmit={handleAdd} className='space-y-4'>
+						<form
+							onSubmit={handleAdd}
+							className='space-y-4'
+							encType='multipart/form-data'>
 							<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
 								<div>
 									<label className='block text-sm font-medium text-gray-700 mb-1'>
@@ -290,10 +348,9 @@ const Assignments = () => {
 								</div>
 								<div>
 									<label className='block text-sm font-medium text-gray-700 mb-1'>
-										Grade-Subject ID
+										Grade-Subject
 									</label>
-									<input
-										type='text'
+									<select
 										value={newAssignmentData.gradeSubjectId}
 										onChange={(e) =>
 											setNewAssignmentData({
@@ -302,16 +359,20 @@ const Assignments = () => {
 											})
 										}
 										className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500'
-										placeholder='Grade-Subject ID'
-										required
-									/>
+										required>
+										<option value=''>Select Grade - Subject</option>
+										{gradeSubjects.map((gs) => (
+											<option key={gs._id} value={gs._id}>
+												{gs.gradeId?.name} - {gs.subjectId?.name}
+											</option>
+										))}
+									</select>
 								</div>
 								<div>
 									<label className='block text-sm font-medium text-gray-700 mb-1'>
-										Teacher ID
+										Teacher
 									</label>
-									<input
-										type='text'
+									<select
 										value={newAssignmentData.teacherId}
 										onChange={(e) =>
 											setNewAssignmentData({
@@ -320,9 +381,14 @@ const Assignments = () => {
 											})
 										}
 										className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500'
-										placeholder='Teacher ID'
-										required
-									/>
+										required>
+										<option value=''>Select Teacher</option>
+										{teachers.map((teacher) => (
+											<option key={teacher._id} value={teacher._id}>
+												{teacher.name}
+											</option>
+										))}
+									</select>
 								</div>
 								<div>
 									<label className='block text-sm font-medium text-gray-700 mb-1'>
@@ -378,6 +444,26 @@ const Assignments = () => {
 										rows='3'
 										placeholder='Enter assignment details and instructions...'
 									/>
+								</div>
+								<div className='md:col-span-2'>
+									<label className='block text-sm font-medium text-gray-700 mb-1'>
+										Details File Upload
+									</label>
+									<div className='relative'>
+										<div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
+											<FileText className='h-5 w-5 text-gray-400' />
+										</div>
+										<input
+											type='file'
+											onChange={(e) =>
+												setNewAssignmentData({
+													...newAssignmentData,
+													detailsFile: e.target.files[0],
+												})
+											}
+											className='w-full pl-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500'
+										/>
+									</div>
 								</div>
 							</div>
 							<div className='flex justify-end space-x-3 pt-2'>
@@ -463,8 +549,7 @@ const Assignments = () => {
 															{assignment.name}
 														</div>
 														<div className='text-sm text-gray-500'>
-															{assignment.gradeSubjectId?.name ||
-																assignment.gradeSubjectId}
+															{assignment.gradeSubjectId?.gradeId.name}
 														</div>
 													</div>
 												</div>
@@ -540,6 +625,20 @@ const Assignments = () => {
 																<p className='text-gray-500 mt-1'>
 																	{assignment.details || 'No details provided'}
 																</p>
+																{assignment.detailsFile && (
+																	<p className='text-gray-500 mt-1'>
+																		<span className='font-medium'>File:</span>{' '}
+																		<a
+																			href={`/uploads/${assignment.detailsFile
+																				.split('/')
+																				.pop()}`}
+																			target='_blank'
+																			rel='noopener noreferrer'
+																			className='text-indigo-600 hover:underline'>
+																			{assignment.detailsFile.split('/').pop()}
+																		</a>
+																	</p>
+																)}
 															</div>
 															<div>
 																<h4 className='font-medium text-gray-900'>
@@ -549,13 +648,12 @@ const Assignments = () => {
 																	<span className='font-medium'>
 																		Grade-Subject:
 																	</span>{' '}
-																	{assignment.gradeSubjectId?.name ||
-																		assignment.gradeSubjectId}
+																	{assignment.gradeSubjectId?.gradeId?.name} -{' '}
+																	{assignment.gradeSubjectId?.subjectId?.name}
 																</p>
 																<p className='text-gray-500'>
 																	<span className='font-medium'>Teacher:</span>{' '}
-																	{assignment.teacherId?.name ||
-																		assignment.teacherId}
+																	{assignment.teacherId?.name || '—'}
 																</p>
 															</div>
 															<div>
@@ -622,7 +720,8 @@ const Assignments = () => {
 										e.preventDefault();
 										handleUpdate(selectedAssignment._id);
 									}}
-									className='mt-6 space-y-4'>
+									className='mt-6 space-y-4'
+									encType='multipart/form-data'>
 									<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
 										<div>
 											<label className='block text-sm font-medium text-gray-700 mb-1'>
@@ -656,6 +755,50 @@ const Assignments = () => {
 												step='1'
 												required
 											/>
+										</div>
+										<div>
+											<label className='block text-sm font-medium text-gray-700 mb-1'>
+												Grade-Subject
+											</label>
+											<select
+												value={editData.gradeSubjectId}
+												onChange={(e) =>
+													setEditData({
+														...editData,
+														gradeSubjectId: e.target.value,
+													})
+												}
+												className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500'
+												required>
+												<option value=''>Select Grade-Subject</option>
+												{gradeSubjects.map((gs) => (
+													<option key={gs._id} value={gs._id}>
+														{gs.name} (Grade {gs.grade})
+													</option>
+												))}
+											</select>
+										</div>
+										<div>
+											<label className='block text-sm font-medium text-gray-700 mb-1'>
+												Teacher
+											</label>
+											<select
+												value={editData.teacherId}
+												onChange={(e) =>
+													setEditData({
+														...editData,
+														teacherId: e.target.value,
+													})
+												}
+												className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500'
+												required>
+												<option value=''>Select Teacher</option>
+												{teachers.map((teacher) => (
+													<option key={teacher._id} value={teacher._id}>
+														{teacher.name}
+													</option>
+												))}
+											</select>
 										</div>
 										<div>
 											<label className='block text-sm font-medium text-gray-700 mb-1'>
@@ -704,6 +847,40 @@ const Assignments = () => {
 												className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500'
 												rows='3'
 											/>
+										</div>
+										<div className='md:col-span-2'>
+											<label className='block text-sm font-medium text-gray-700 mb-1'>
+												Details File Upload
+											</label>
+											<div className='relative'>
+												<div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
+													<FileText className='h-5 w-5 text-gray-400' />
+												</div>
+												<input
+													type='file'
+													onChange={(e) =>
+														setEditData({
+															...editData,
+															detailsFile: e.target.files[0],
+														})
+													}
+													className='w-full pl-10 px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500'
+												/>
+											</div>
+											{selectedAssignment.detailsFile && (
+												<p className='text-sm text-gray-500 mt-1'>
+													Current file:{' '}
+													<a
+														href={`/uploads/${selectedAssignment.detailsFile
+															.split('/')
+															.pop()}`}
+														target='_blank'
+														rel='noopener noreferrer'
+														className='text-indigo-600 hover:underline'>
+														{selectedAssignment.detailsFile.split('/').pop()}
+													</a>
+												</p>
+											)}
 										</div>
 									</div>
 									<div className='flex justify-end space-x-3 pt-4'>

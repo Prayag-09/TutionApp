@@ -176,7 +176,7 @@ const Teachers = () => {
 			};
 			const res = await createTeacher(formattedData);
 			if (!res.data.success)
-				throw new Error(res.data.message || 'Failed to add teacher');
+				throw new Error(res.data.message || 'Failed to add  teacher');
 			setTeachers([...teachers, res.data.data]);
 			setNewTeacherData({
 				name: '',
@@ -212,7 +212,18 @@ const Teachers = () => {
 			{!selectedTeacher && !showAddForm && (
 				<button
 					onClick={() => setShowAddForm(true)}
-					className='bg-blue-500 text-white px-6 py-2 rounded mb-6 hover:bg-blue-600 transition-colors'>
+					className='inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white px-6 py-3 rounded-lg shadow-md hover:from-blue-700 hover:to-blue-600 transition-all duration-200 transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 mb-6'>
+					<svg
+						xmlns='http://www.w3.org/2000/svg'
+						className='h-5 w-5'
+						viewBox='0 0 20 20'
+						fill='currentColor'>
+						<path
+							fillRule='evenodd'
+							d='M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z'
+							clipRule='evenodd'
+						/>
+					</svg>
 					Add Teacher
 				</button>
 			)}
@@ -837,25 +848,40 @@ const Teachers = () => {
 							{teachers.map((teacher) => (
 								<tr
 									key={teacher._id}
-									className='hover:bg-gray-50 transition-colors'>
-									<td className='border px-6 py-3'>{teacher.name}</td>
-									<td className='border px-6 py-3'>{teacher.email}</td>
-									<td className='border px-6 py-3'>{teacher.mobile}</td>
-									<td className='border px-6 py-3'>{teacher.status}</td>
+									className='hover:bg-gray-50 transition-colors even:bg-gray-50/50'>
+									<td className='border px-6 py-3 font-medium text-gray-700'>
+										{teacher.name}
+									</td>
+									<td className='border px-6 py-3 text-gray-600'>
+										{teacher.email}
+									</td>
+									<td className='border px-6 py-3 text-gray-600'>
+										{teacher.mobile}
+									</td>
+									<td className='border px-6 py-3'>
+										<span
+											className={`px-2 py-1 rounded-full text-xs font-medium ${
+												teacher.status === 'Active'
+													? 'bg-green-100 text-green-800'
+													: 'bg-red-100 text-red-800'
+											}`}>
+											{teacher.status}
+										</span>
+									</td>
 									<td className='border px-6 py-3 space-x-2'>
 										<button
 											onClick={() => handleViewDetails(teacher._id, false)}
-											className='bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors'>
+											className='bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2'>
 											Edit Status
 										</button>
 										<button
 											onClick={() => handleViewDetails(teacher._id, true)}
-											className='bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition-colors'>
+											className='bg-amber-600 text-white px-4 py-2 rounded-md hover:bg-amber-700 transition-colors focus:ring-2 focus:ring-amber-500 focus:ring-offset-2'>
 											Edit Details
 										</button>
 										<button
 											onClick={() => handleDelete(teacher._id)}
-											className='bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors'>
+											className='bg-rose-600 text-white px-4 py-2 rounded-md hover:bg-rose-700 transition-colors focus:ring-2 focus:ring-rose-500 focus:ring-offset-2'>
 											Delete
 										</button>
 									</td>

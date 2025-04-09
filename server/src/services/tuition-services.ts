@@ -47,6 +47,7 @@ interface AssignmentData {
 	maximumMark: number;
 	status?: 'Live' | 'Archive';
 	dueDate: Date;
+	detailsFile: {};
 }
 
 interface QuizData {
@@ -313,7 +314,7 @@ export const addStudentSubjectService = async (data: StudentSubjectData) => {
 		const existingRelation = await StudentSubject.findOne({
 			studentId: data.studentId,
 			subjectId: data.subjectId,
-			teacherId: data.teacherId, // Added to match schema
+			teacherId: data.teacherId,
 		});
 		if (existingRelation)
 			throw new Error(
@@ -331,7 +332,7 @@ export const getAllStudentSubjectsService = async () => {
 		const studentSubjects = await StudentSubject.find()
 			.populate('studentId')
 			.populate('subjectId')
-			.populate('teacherId'); // Added to match schema
+			.populate('teacherId');
 		return studentSubjects;
 	} catch (error: any) {
 		throw new Error(`Failed to fetch student-subjects: ${error.message}`);
@@ -340,7 +341,7 @@ export const getAllStudentSubjectsService = async () => {
 
 export const updateStudentSubjectStatusService = async (
 	studentSubjectId: string,
-	status: 'Live' | 'Archive' // Updated to match schema
+	status: 'Live' | 'Archive'
 ) => {
 	try {
 		const updatedStudentSubject = await StudentSubject.findByIdAndUpdate(
@@ -361,7 +362,7 @@ export const updateStudentSubjectStatusService = async (
 export const recordAttendanceService = async (data: AttendanceData) => {
 	try {
 		const existingAttendance = await Attendance.findOne({
-			student: data.student, // Updated to match schema
+			student: data.student,
 			date: data.date,
 		});
 		if (existingAttendance)
@@ -414,8 +415,15 @@ export const addAssignmentService = async (data: AssignmentData) => {
 export const getAllAssignmentsService = async () => {
 	try {
 		const assignments = await Assignment.find()
-			.populate('gradeSubjectId')
-			.populate('teacherId');
+			.populate({
+				path: 'gradeSubjectId',
+				populate: [
+					{ path: 'gradeId', select: 'name' },
+					{ path: 'subjectId', select: 'name' },
+				],
+			})
+			.populate('teacherId', 'name');
+
 		return assignments;
 	} catch (error: any) {
 		throw new Error(`Failed to fetch assignments: ${error.message}`);

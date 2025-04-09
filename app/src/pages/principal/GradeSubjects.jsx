@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Select from 'react-select';
 import {
 	getAllGradeSubjects,
@@ -9,12 +9,20 @@ import {
 	getAllGrades,
 	getAllSubjects,
 } from '../../lib/axios';
+import {
+	FiEdit2,
+	FiTrash2,
+	FiPlus,
+	FiX,
+	FiCheck,
+	FiLoader,
+} from 'react-icons/fi';
 
 const GradeSubjects = () => {
 	const [gradeSubjects, setGradeSubjects] = useState([]);
 	const [selectedGradeSubject, setSelectedGradeSubject] = useState(null);
 	const [editData, setEditData] = useState({
-		gradeId: null, // Use { value, label } object for react-select
+		gradeId: null,
 		subjectId: null,
 		status: 'Live',
 	});
@@ -28,102 +36,117 @@ const GradeSubjects = () => {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
 	const [showAddForm, setShowAddForm] = useState(false);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
-	// Fetch all grade-subjects, grades, and subjects
-	useEffect(() => {
-		const fetchData = async () => {
-			try {
-				setLoading(true);
-				const [gsRes, gradesRes, subjectsRes] = await Promise.all([
-					getAllGradeSubjects(),
-					getAllGrades(),
-					getAllSubjects(),
-				]);
+	// Fetch all data
+	const fetchData = useCallback(async () => {
+		try {
+			setLoading(true);
+			setError(null);
 
-				if (!gsRes.data.success)
-					throw new Error(
-						gsRes.data.message || 'Failed to fetch grade-subjects'
-					);
-				if (!gradesRes.data.success)
-					throw new Error(gradesRes.data.message || 'Failed to fetch grades');
-				if (!subjectsRes.data.success)
-					throw new Error(
-						subjectsRes.data.message || 'Failed to fetch subjects'
-					);
+			const [gsRes, gradesRes, subjectsRes] = await Promise.all([
+				getAllGradeSubjects(),
+				getAllGrades(),
+				getAllSubjects(),
+			]);
 
-				setGradeSubjects(gsRes.data.data);
-				setGradeOptions(
-					gradesRes.data.data.map((grade) => ({
-						value: grade._id,
-						label: grade.name,
-					}))
+			if (
+				!gsRes.data.success ||
+				!gradesRes.data.success ||
+				!subjectsRes.data.success
+			) {
+				throw new Error(
+					gsRes.data.message ||
+						gradesRes.data.message ||
+						subjectsRes.data.message ||
+						'Failed to fetch data'
 				);
-				setSubjectOptions(
-					subjectsRes.data.data.map((subject) => ({
-						value: subject._id,
-						label: subject.name,
-					}))
-				);
-			} catch (err) {
-				setError(err.message || 'Failed to load data');
-			} finally {
-				setLoading(false);
 			}
-		};
 
-		fetchData();
+			setGradeSubjects(gsRes.data.data);
+			setGradeOptions(
+				gradesRes.data.data.map((grade) => ({
+					value: grade._id,
+					label: grade.name,
+				}))
+			);
+			setSubjectOptions(
+				subjectsRes.data.data.map((subject) => ({
+					value: subject._id,
+					label: subject.name,
+				}))
+			);
+		} catch (err) {
+			setError(err.message || 'Failed to load data');
+			console.error('Fetch error:', err);
+		} finally {
+			setLoading(false);
+		}
 	}, []);
 
-	// Fetch and populate grade-subject details for editing
+	useEffect(() => {
+		fetchData();
+	}, [fetchData]);
+
+	// Handle view details for editing
 	const handleViewDetails = async (id) => {
 		try {
+			setLoading(true);
 			const res = await getGradeSubjectById(id);
 			if (!res.data.success)
-				throw new Error(res.data.message || 'Failed to fetch grade-subject');
+				throw new Error(res.data.message || 'Failed to fetch details');
+
 			const data = res.data.data;
 			setSelectedGradeSubject(data);
 			setEditData({
-				gradeId: gradeOptions.find(
-					(opt) => opt.value === data.gradeId._id.toString()
-				) || {
+				gradeId: {
 					value: data.gradeId._id,
 					label: data.gradeId.name,
 				},
-				subjectId: subjectOptions.find(
-					(opt) => opt.value === data.subjectId._id.toString()
-				) || {
+				subjectId: {
 					value: data.subjectId._id,
 					label: data.subjectId.name,
 				},
 				status: data.status || 'Live',
 			});
-			setError(null);
 		} catch (err) {
-			setError(err.message || 'Failed to load grade-subject details');
+			setError(err.message || 'Failed to load details');
+			console.error('Details error:', err);
+		} finally {
+			setLoading(false);
 		}
 	};
 
 	// Add new grade-subject
 	const handleAdd = async (e) => {
 		e.preventDefault();
+		if (!newData.gradeId || !newData.subjectId) {
+			setError('Please select both grade and subject');
+			return;
+		}
+
 		try {
-			if (!newData.gradeId || !newData.subjectId) {
-				throw new Error('Grade and Subject are required');
-			}
+			setIsSubmitting(true);
+			setError(null);
+
 			const formattedData = {
 				gradeId: newData.gradeId.value,
 				subjectId: newData.subjectId.value,
 				status: newData.status,
 			};
+
 			const res = await createGradeSubject(formattedData);
 			if (!res.data.success)
-				throw new Error(res.data.message || 'Failed to add grade-subject');
+				throw new Error(res.data.message || 'Failed to add');
+
 			setGradeSubjects([...gradeSubjects, res.data.data]);
 			setNewData({ gradeId: null, subjectId: null, status: 'Live' });
 			setShowAddForm(false);
-			setError(null);
 		} catch (err) {
-			setError(err.message || 'Failed to add grade-subject');
+			setError(err.message || 'Failed to add mapping');
+			console.error('Add error:', err);
+		} finally {
+			setIsSubmitting(false);
 		}
 	};
 
@@ -131,183 +154,211 @@ const GradeSubjects = () => {
 	const handleUpdate = async (e, id) => {
 		e.preventDefault();
 		try {
+			setIsSubmitting(true);
+			setError(null);
+
 			const formattedData = {
 				gradeId: editData.gradeId.value,
 				subjectId: editData.subjectId.value,
 				status: editData.status,
 			};
+
 			const res = await updateGradeSubject(id, formattedData);
 			if (!res.data.success)
-				throw new Error(res.data.message || 'Failed to update grade-subject');
+				throw new Error(res.data.message || 'Failed to update');
+
 			setGradeSubjects(
 				gradeSubjects.map((gs) => (gs._id === id ? res.data.data : gs))
 			);
 			setSelectedGradeSubject(null);
-			setEditData({ gradeId: null, subjectId: null, status: 'Live' });
-			setError(null);
 		} catch (err) {
-			setError(err.message || 'Failed to update grade-subject');
+			setError(err.message || 'Failed to update');
+			console.error('Update error:', err);
+		} finally {
+			setIsSubmitting(false);
 		}
 	};
 
 	// Delete grade-subject
 	const handleDelete = async (id) => {
-		if (
-			window.confirm(
-				'Are you sure you want to delete this grade-subject mapping?'
-			)
-		) {
-			try {
-				const res = await deleteGradeSubject(id);
-				if (!res.data.success)
-					throw new Error(res.data.message || 'Failed to delete grade-subject');
-				setGradeSubjects(gradeSubjects.filter((gs) => gs._id !== id));
+		if (!window.confirm('Are you sure you want to delete this mapping?'))
+			return;
+
+		try {
+			setIsSubmitting(true);
+			const res = await deleteGradeSubject(id);
+			if (!res.data.success)
+				throw new Error(res.data.message || 'Failed to delete');
+
+			setGradeSubjects(gradeSubjects.filter((gs) => gs._id !== id));
+			if (selectedGradeSubject?._id === id) {
 				setSelectedGradeSubject(null);
-				setEditData({ gradeId: null, subjectId: null, status: 'Live' });
-			} catch (err) {
-				setError(err.message || 'Failed to delete grade-subject');
 			}
+		} catch (err) {
+			setError(err.message || 'Failed to delete');
+			console.error('Delete error:', err);
+		} finally {
+			setIsSubmitting(false);
 		}
 	};
 
-	if (loading)
-		return <div className='text-center text-gray-500'>Loading...</div>;
-	if (error) return <div className='text-center text-red-500'>{error}</div>;
+	// Reset forms
+	const resetForms = () => {
+		setSelectedGradeSubject(null);
+		setShowAddForm(false);
+		setEditData({ gradeId: null, subjectId: null, status: 'Live' });
+		setNewData({ gradeId: null, subjectId: null, status: 'Live' });
+		setError(null);
+	};
+
+	if (loading) {
+		return (
+			<div className='flex justify-center items-center h-64'>
+				<FiLoader className='animate-spin text-3xl text-blue-500' />
+			</div>
+		);
+	}
+
+	if (error) {
+		return (
+			<div className='bg-red-50 border-l-4 border-red-500 p-4 mb-6'>
+				<div className='flex items-center'>
+					<div className='flex-shrink-0'>
+						<FiX className='h-5 w-5 text-red-500' />
+					</div>
+					<div className='ml-3'>
+						<p className='text-sm text-red-700'>{error}</p>
+						<button
+							onClick={fetchData}
+							className='mt-2 text-sm text-red-500 hover:text-red-700'>
+							Try again
+						</button>
+					</div>
+				</div>
+			</div>
+		);
+	}
 
 	return (
-		<div className='container mx-auto p-4'>
-			<h1 className='text-3xl font-bold mb-6 text-gray-800'>
-				Manage Grade-Subjects
-			</h1>
+		<div className='container mx-auto p-4 max-w-6xl'>
+			<div className='flex justify-between items-center mb-8'>
+				<h1 className='text-2xl md:text-3xl font-bold text-gray-800'>
+					Grade-Subject Mappings
+				</h1>
+				{!selectedGradeSubject && !showAddForm && (
+					<button
+						onClick={() => setShowAddForm(true)}
+						className='flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow transition-colors duration-200'>
+						<FiPlus className='h-5 w-5' />
+						Add Mapping
+					</button>
+				)}
+			</div>
 
-			{/* Add Grade-Subject Form */}
-			{showAddForm && (
-				<div className='mb-8 bg-white p-6 rounded-lg shadow-lg'>
-					<h2 className='text-2xl font-semibold mb-4 text-gray-800'>
-						Add Grade-Subject
-					</h2>
-					<form onSubmit={handleAdd} className='space-y-6'>
-						<div>
-							<label className='block text-sm font-medium text-gray-700'>
-								Grade *
-							</label>
-							<Select
-								options={gradeOptions}
-								value={newData.gradeId}
-								onChange={(selected) =>
-									setNewData({ ...newData, gradeId: selected })
-								}
-								className='mt-1'
-								placeholder='Select grade...'
-							/>
-						</div>
-						<div>
-							<label className='block text-sm font-medium text-gray-700'>
-								Subject *
-							</label>
-							<Select
-								options={subjectOptions}
-								value={newData.subjectId}
-								onChange={(selected) =>
-									setNewData({ ...newData, subjectId: selected })
-								}
-								className='mt-1'
-								placeholder='Select subject...'
-							/>
-						</div>
-						<div>
-							<label className='block text-sm font-medium text-gray-700'>
-								Status
-							</label>
-							<select
-								value={newData.status}
-								onChange={(e) =>
-									setNewData({ ...newData, status: e.target.value })
-								}
-								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2'>
-								<option value='Live'>Live</option>
-								<option value='Archive'>Archive</option>
-							</select>
-						</div>
-						<div className='flex space-x-4'>
-							<button
-								type='submit'
-								className='bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600 transition-colors'>
-								Add
-							</button>
-							<button
-								type='button'
-								onClick={() => setShowAddForm(false)}
-								className='bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600 transition-colors'>
-								Cancel
-							</button>
-						</div>
-					</form>
-				</div>
-			)}
+			{/* Forms */}
+			{(showAddForm || selectedGradeSubject) && (
+				<div className='bg-white rounded-xl shadow-md p-6 mb-8 border border-gray-100'>
+					<div className='flex justify-between items-center mb-4'>
+						<h2 className='text-xl font-semibold text-gray-800'>
+							{showAddForm ? 'Add New Mapping' : 'Edit Mapping'}
+						</h2>
+						<button
+							onClick={resetForms}
+							className='text-gray-500 hover:text-gray-700'>
+							<FiX className='h-5 w-5' />
+						</button>
+					</div>
 
-			{/* Edit Grade-Subject Form */}
-			{selectedGradeSubject && (
-				<div className='mb-8 bg-white p-6 rounded-lg shadow-lg'>
-					<h2 className='text-2xl font-semibold mb-4 text-gray-800'>
-						Edit Grade-Subject
-					</h2>
 					<form
-						onSubmit={(e) => handleUpdate(e, selectedGradeSubject._id)}
-						className='space-y-6'>
-						<div>
-							<label className='block text-sm font-medium text-gray-700'>
-								Grade
-							</label>
-							<Select
-								options={gradeOptions}
-								value={editData.gradeId}
-								onChange={(selected) =>
-									setEditData({ ...editData, gradeId: selected })
-								}
-								className='mt-1'
-								placeholder='Select grade...'
-							/>
+						onSubmit={
+							showAddForm
+								? handleAdd
+								: (e) => handleUpdate(e, selectedGradeSubject._id)
+						}
+						className='space-y-4'>
+						<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+							<div>
+								<label className='block text-sm font-medium text-gray-700 mb-1'>
+									Grade *
+								</label>
+								<Select
+									options={gradeOptions}
+									value={showAddForm ? newData.gradeId : editData.gradeId}
+									onChange={(selected) =>
+										showAddForm
+											? setNewData({ ...newData, gradeId: selected })
+											: setEditData({ ...editData, gradeId: selected })
+									}
+									className='react-select-container'
+									classNamePrefix='react-select'
+									placeholder='Select grade...'
+									isClearable
+									required
+								/>
+							</div>
+
+							<div>
+								<label className='block text-sm font-medium text-gray-700 mb-1'>
+									Subject *
+								</label>
+								<Select
+									options={subjectOptions}
+									value={showAddForm ? newData.subjectId : editData.subjectId}
+									onChange={(selected) =>
+										showAddForm
+											? setNewData({ ...newData, subjectId: selected })
+											: setEditData({ ...editData, subjectId: selected })
+									}
+									className='react-select-container'
+									classNamePrefix='react-select'
+									placeholder='Select subject...'
+									isClearable
+									required
+								/>
+							</div>
 						</div>
-						<div>
-							<label className='block text-sm font-medium text-gray-700'>
-								Subject
-							</label>
-							<Select
-								options={subjectOptions}
-								value={editData.subjectId}
-								onChange={(selected) =>
-									setEditData({ ...editData, subjectId: selected })
-								}
-								className='mt-1'
-								placeholder='Select subject...'
-							/>
-						</div>
-						<div>
-							<label className='block text-sm font-medium text-gray-700'>
+
+						<div className='w-full md:w-1/2'>
+							<label className='block text-sm font-medium text-gray-700 mb-1'>
 								Status
 							</label>
 							<select
-								value={editData.status}
+								value={showAddForm ? newData.status : editData.status}
 								onChange={(e) =>
-									setEditData({ ...editData, status: e.target.value })
+									showAddForm
+										? setNewData({ ...newData, status: e.target.value })
+										: setEditData({ ...editData, status: e.target.value })
 								}
-								className='mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2'>
+								className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500'>
 								<option value='Live'>Live</option>
 								<option value='Archive'>Archive</option>
 							</select>
 						</div>
-						<div className='flex space-x-4'>
-							<button
-								type='submit'
-								className='bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600 transition-colors'>
-								Update
-							</button>
+
+						<div className='flex justify-end space-x-3 pt-4'>
 							<button
 								type='button'
-								onClick={() => setSelectedGradeSubject(null)}
-								className='bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600 transition-colors'>
+								onClick={resetForms}
+								className='px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors'>
 								Cancel
+							</button>
+							<button
+								type='submit'
+								disabled={isSubmitting}
+								className='flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-70'>
+								{isSubmitting ? (
+									<FiLoader className='animate-spin h-5 w-5' />
+								) : showAddForm ? (
+									<>
+										<FiCheck className='h-5 w-5' />
+										Add Mapping
+									</>
+								) : (
+									<>
+										<FiCheck className='h-5 w-5' />
+										Update
+									</>
+								)}
 							</button>
 						</div>
 					</form>
@@ -316,65 +367,89 @@ const GradeSubjects = () => {
 
 			{/* Grade-Subjects Table */}
 			{!selectedGradeSubject && !showAddForm && (
-				<div className='bg-white p-6 rounded-lg shadow-lg'>
-					<button
-						onClick={() => setShowAddForm(true)}
-						className='bg-blue-500 text-white px-6 py-2 rounded mb-6 hover:bg-blue-600 transition-colors'>
-						Add Grade-Subject
-					</button>
-					<table className='min-w-full border-collapse'>
-						<thead>
-							<tr className='bg-gray-200'>
-								<th className='border px-6 py-3 text-left text-gray-700'>
-									Grade
-								</th>
-								<th className='border px-6 py-3 text-left text-gray-700'>
-									Subject
-								</th>
-								<th className='border px-6 py-3 text-left text-gray-700'>
-									Status
-								</th>
-								<th className='border px-6 py-3 text-left text-gray-700'>
-									Actions
-								</th>
-							</tr>
-						</thead>
-						<tbody>
-							{gradeSubjects.map((gs) => (
-								<tr key={gs._id} className='hover:bg-gray-50 transition-colors'>
-									<td className='border px-6 py-3'>
-										{gradeOptions.find(
-											(opt) => opt.value === gs.gradeId?._id?.toString()
-										)?.label ||
-											gs.gradeId?.name ||
-											gs.gradeId?._id ||
-											'N/A'}
-									</td>
-									<td className='border px-6 py-3'>
-										{subjectOptions.find(
-											(opt) => opt.value === gs.subjectId?._id?.toString()
-										)?.label ||
-											gs.subjectId?.name ||
-											gs.subjectId?._id ||
-											'N/A'}
-									</td>
-									<td className='border px-6 py-3'>{gs.status}</td>
-									<td className='border px-6 py-3 space-x-2'>
-										<button
-											onClick={() => handleViewDetails(gs._id)}
-											className='bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors'>
-											Edit
-										</button>
-										<button
-											onClick={() => handleDelete(gs._id)}
-											className='bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors'>
-											Delete
-										</button>
-									</td>
+				<div className='bg-white rounded-xl shadow-md overflow-hidden border border-gray-100'>
+					<div className='overflow-x-auto'>
+						<table className='min-w-full divide-y divide-gray-200'>
+							<thead className='bg-gray-50'>
+								<tr>
+									<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+										Grade
+									</th>
+									<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+										Subject
+									</th>
+									<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+										Status
+									</th>
+									<th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
+										Actions
+									</th>
 								</tr>
-							))}
-						</tbody>
-					</table>
+							</thead>
+							<tbody className='bg-white divide-y divide-gray-200'>
+								{gradeSubjects.length > 0 ? (
+									gradeSubjects.map((gs) => (
+										<tr
+											key={gs._id}
+											className='hover:bg-gray-50 transition-colors'>
+											<td className='px-6 py-4 whitespace-nowrap'>
+												<div className='text-sm font-medium text-gray-900'>
+													{gradeOptions.find(
+														(opt) => opt.value === gs.gradeId?._id
+													)?.label ||
+														gs.gradeId?.name ||
+														'N/A'}
+												</div>
+											</td>
+											<td className='px-6 py-4 whitespace-nowrap'>
+												<div className='text-sm text-gray-900'>
+													{subjectOptions.find(
+														(opt) => opt.value === gs.subjectId?._id
+													)?.label ||
+														gs.subjectId?.name ||
+														'N/A'}
+												</div>
+											</td>
+											<td className='px-6 py-4 whitespace-nowrap'>
+												<span
+													className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+														gs.status === 'Live'
+															? 'bg-green-100 text-green-800'
+															: 'bg-gray-100 text-gray-800'
+													}`}>
+													{gs.status}
+												</span>
+											</td>
+											<td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
+												<div className='flex justify-end space-x-2'>
+													<button
+														onClick={() => handleViewDetails(gs._id)}
+														className='text-blue-600 hover:text-blue-900 transition-colors'
+														title='Edit'>
+														<FiEdit2 className='h-5 w-5' />
+													</button>
+													<button
+														onClick={() => handleDelete(gs._id)}
+														className='text-red-600 hover:text-red-900 transition-colors'
+														title='Delete'>
+														<FiTrash2 className='h-5 w-5' />
+													</button>
+												</div>
+											</td>
+										</tr>
+									))
+								) : (
+									<tr>
+										<td
+											colSpan='4'
+											className='px-6 py-4 text-center text-sm text-gray-500'>
+											No grade-subject mappings found. Add one to get started.
+										</td>
+									</tr>
+								)}
+							</tbody>
+						</table>
+					</div>
 				</div>
 			)}
 		</div>

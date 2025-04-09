@@ -32,6 +32,7 @@ export const assignmentValidator = z.object({
 	maximumMark: z.number().positive('Maximum mark must be positive'),
 	status: statusEnum.default('Live'),
 	dueDate: z.date().min(new Date(), 'Due date must be in the future'),
+	detailsFile: z.string().optional(),
 });
 
 export const quizValidator = z.object({

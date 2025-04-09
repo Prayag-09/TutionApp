@@ -64,7 +64,6 @@ const Parents = () => {
 						<tr className='bg-gray-100'>
 							<th className='border px-4 py-2 text-left'>Name</th>
 							<th className='border px-4 py-2 text-left'>Email</th>
-							<th className='border px-4 py-2 text-left'>Role</th>
 							<th className='border px-4 py-2 text-left'>Status</th>
 							<th className='border px-4 py-2 text-left'>Actions</th>
 						</tr>
@@ -74,7 +73,6 @@ const Parents = () => {
 							<tr key={parent._id} className='hover:bg-gray-50'>
 								<td className='border px-4 py-2'>{parent.name}</td>
 								<td className='border px-4 py-2'>{parent.email}</td>
-								<td className='border px-4 py-2'>{parent.role}</td>
 								<td className='border px-4 py-2'>{parent.status}</td>
 								<td className='border px-4 py-2'>
 									<button
