@@ -26,22 +26,11 @@ const routesByRole = {
 			label: 'Manage Grade-Subjects',
 			icon: BookOpen,
 		},
-		{
-			path: '/principal/assignments',
-			label: 'Manage Assignments',
-			icon: FileText,
-		},
-		{ path: '/principal/quizzes', label: 'Manage Quizzes', icon: FileText },
 		{ path: '/principal/fees', label: 'Fee Management', icon: DollarSign },
 		{
 			path: '/principal/reports',
 			label: 'Reports & Analytics',
 			icon: BarChart2,
-		},
-		{
-			path: '/principal/access-control',
-			label: 'User Access Control',
-			icon: Lock,
 		},
 	],
 	teacher: [
@@ -49,21 +38,16 @@ const routesByRole = {
 		{ path: '/teacher/students', label: 'My Students', icon: Users },
 		{ path: '/teacher/assignments', label: 'Assignments', icon: FileText },
 		{ path: '/teacher/quizzes', label: 'Quizzes', icon: FileQuestion },
-		{ path: '/teacher/attendance', label: 'Attendance', icon: FileCheck },
-		{ path: '/teacher/reports', label: 'Reports', icon: BarChart2 },
 	],
 	student: [
 		{ path: '/student/dashboard', label: 'Dashboard', icon: LayoutDashboard },
 		{ path: '/student/assignments', label: 'Assignments', icon: FileText },
 		{ path: '/student/quizzes', label: 'Quizzes', icon: FileQuestion },
-		{ path: '/student/exams', label: 'Exams', icon: FileCheck },
-		{ path: '/student/attendance', label: 'Attendance', icon: FileCheck },
 	],
 	parent: [
 		{ path: '/parent/dashboard', label: 'Dashboard', icon: LayoutDashboard },
 		{ path: '/parent/children', label: 'My Children', icon: Users },
 		{ path: '/parent/fee-payment', label: 'Fee Payment', icon: DollarSign },
-		{ path: '/parent/reports', label: 'Reports', icon: BarChart2 },
 	],
 };
 

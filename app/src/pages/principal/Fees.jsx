@@ -18,16 +18,25 @@ import {
 	updateFee,
 	updateFeeStatus,
 	deleteFee,
+	getAllTeachers,
+	getAllGrades,
+	getAllSubjects,
+	getAllGradeSubjects,
 } from '../../lib/axios.js';
 
 const Fees = () => {
 	const [fees, setFees] = useState([]);
+	const [teachers, setTeachers] = useState([]);
+	const [grades, setGrades] = useState([]);
+	const [subjects, setSubjects] = useState([]);
+	const [gradeSubjects, setGradeSubjects] = useState([]);
 	const [selectedFee, setSelectedFee] = useState(null);
 	const [editData, setEditData] = useState({
 		feeName: '',
 		gradeId: '',
 		subjectId: '',
 		teacherId: '',
+		gradeSubjectId: '',
 		amount: '',
 		status: 'pending',
 	});
@@ -36,6 +45,7 @@ const Fees = () => {
 		gradeId: '',
 		subjectId: '',
 		teacherId: '',
+		gradeSubjectId: '',
 		amount: '',
 		status: 'pending',
 	});
@@ -44,23 +54,51 @@ const Fees = () => {
 	const [showAddForm, setShowAddForm] = useState(false);
 	const [expandedRows, setExpandedRows] = useState({});
 
-	// Fetch all fees
+	// Fetch all fees, grades, subjects, teachers, and grade-subjects
 	useEffect(() => {
-		const fetchFees = async () => {
+		const fetchData = async () => {
 			try {
 				setLoading(true);
-				const res = await getAllFees();
-				setFees(res.data.fees || res.data.data);
+				const [feesRes, teachersRes, gradesRes, subjectsRes, gradeSubjectsRes] =
+					await Promise.all([
+						getAllFees(),
+						getAllTeachers(),
+						getAllGrades(),
+						getAllSubjects(),
+						getAllGradeSubjects(),
+					]);
+				// Ensure fees is an array
+				setFees(
+					Array.isArray(feesRes.data.fees)
+						? feesRes.data.fees
+						: Array.isArray(feesRes.data.data)
+						? feesRes.data.data
+						: []
+				);
+				setTeachers(
+					Array.isArray(teachersRes.data.data) ? teachersRes.data.data : []
+				);
+				setGrades(
+					Array.isArray(gradesRes.data.data) ? gradesRes.data.data : []
+				);
+				setSubjects(
+					Array.isArray(subjectsRes.data.data) ? subjectsRes.data.data : []
+				);
+				setGradeSubjects(
+					Array.isArray(gradeSubjectsRes.data.data)
+						? gradeSubjectsRes.data.data
+						: []
+				);
 				setError(null);
 			} catch (err) {
-				setError('Failed to load fees. Please try again later.');
-				console.error('Error fetching fees:', err);
+				setError('Failed to load data. Please try again later.');
+				console.error('Error fetching data:', err);
 			} finally {
 				setLoading(false);
 			}
 		};
 
-		fetchFees();
+		fetchData();
 	}, []);
 
 	// Toggle row expansion
@@ -79,15 +117,63 @@ const Fees = () => {
 			gradeId: fee.gradeId?._id || fee.gradeId || '',
 			subjectId: fee.subjectId?._id || fee.subjectId || '',
 			teacherId: fee.teacherId?._id || fee.teacherId || '',
+			gradeSubjectId: fee.gradeSubjectId?._id || fee.gradeSubjectId || '',
 			amount: fee.amount,
 			status: fee.status || 'pending',
 		});
 	};
 
+	// Add new fee
+	const handleAdd = async (e) => {
+		e.preventDefault();
+		try {
+			const feeData = {
+				feeName: newFeeData.feeName,
+				gradeId: newFeeData.gradeId,
+				subjectId: newFeeData.subjectId,
+				teacherId: newFeeData.teacherId,
+				gradeSubjectId: newFeeData.gradeSubjectId || undefined, // Optional field
+				amount: parseFloat(newFeeData.amount),
+				status: newFeeData.status,
+			};
+			const res = await addFee(feeData);
+			if (!res.data.success) {
+				throw new Error(res.data.message || 'Failed to add fee');
+			}
+			setFees([...fees, res.data.data]);
+			setNewFeeData({
+				feeName: '',
+				gradeId: '',
+				subjectId: '',
+				teacherId: '',
+				gradeSubjectId: '',
+				amount: '',
+				status: 'pending',
+			});
+			setShowAddForm(false);
+			setError(null);
+		} catch (err) {
+			setError(err.message || 'Failed to add fee. Please try again.');
+			console.error('Error adding fee:', err);
+		}
+	};
+
 	// Update fee
 	const handleUpdate = async (id) => {
 		try {
-			const res = await updateFee(id, editData);
+			const feeData = {
+				feeName: editData.feeName,
+				gradeId: editData.gradeId,
+				subjectId: editData.subjectId,
+				teacherId: editData.teacherId,
+				gradeSubjectId: editData.gradeSubjectId || undefined, // Optional field
+				amount: parseFloat(editData.amount),
+				status: editData.status,
+			};
+			const res = await updateFee(id, feeData);
+			if (!res.data.success) {
+				throw new Error(res.data.message || 'Failed to update fee');
+			}
 			setFees(fees.map((fee) => (fee._id === id ? res.data.data : fee)));
 			setSelectedFee(null);
 			setEditData({
@@ -95,21 +181,29 @@ const Fees = () => {
 				gradeId: '',
 				subjectId: '',
 				teacherId: '',
+				gradeSubjectId: '',
 				amount: '',
 				status: 'pending',
 			});
+			setError(null);
 		} catch (err) {
-			setError('Failed to update fee. Please try again.');
+			setError(err.message || 'Failed to update fee. Please try again.');
+			console.error('Error updating fee:', err);
 		}
 	};
 
 	// Update fee status
 	const handleUpdateStatus = async (id, newStatus) => {
 		try {
-			const res = await updateFeeStatus(id, newStatus);
+			const res = await updateFeeStatus(id, { status: newStatus });
+			if (!res.data.success) {
+				throw new Error(res.data.message || 'Failed to update fee status');
+			}
 			setFees(fees.map((fee) => (fee._id === id ? res.data.data : fee)));
+			setError(null);
 		} catch (err) {
-			setError('Failed to update fee status. Please try again.');
+			setError(err.message || 'Failed to update fee status. Please try again.');
+			console.error('Error updating fee status:', err);
 		}
 	};
 
@@ -120,29 +214,11 @@ const Fees = () => {
 				await deleteFee(id);
 				setFees(fees.filter((fee) => fee._id !== id));
 				setSelectedFee(null);
+				setError(null);
 			} catch (err) {
 				setError('Failed to delete fee. Please try again.');
+				console.error('Error deleting fee:', err);
 			}
-		}
-	};
-
-	// Add new fee
-	const handleAdd = async (e) => {
-		e.preventDefault();
-		try {
-			const res = await addFee(newFeeData);
-			setFees([...fees, res.data.data]);
-			setNewFeeData({
-				feeName: '',
-				gradeId: '',
-				subjectId: '',
-				teacherId: '',
-				amount: '',
-				status: 'pending',
-			});
-			setShowAddForm(false);
-		} catch (err) {
-			setError('Failed to add fee. Please try again.');
 		}
 	};
 
@@ -287,23 +363,26 @@ const Fees = () => {
 									<label className='block text-sm font-medium text-gray-700 mb-1'>
 										Grade
 									</label>
-									<input
-										type='text'
+									<select
 										value={newFeeData.gradeId}
 										onChange={(e) =>
 											setNewFeeData({ ...newFeeData, gradeId: e.target.value })
 										}
 										className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500'
-										placeholder='Grade ID'
-										required
-									/>
+										required>
+										<option value=''>Select Grade</option>
+										{grades.map((grade) => (
+											<option key={grade._id} value={grade._id}>
+												{grade.gradeName || `Grade ${grade.grade}`}
+											</option>
+										))}
+									</select>
 								</div>
 								<div>
 									<label className='block text-sm font-medium text-gray-700 mb-1'>
 										Subject
 									</label>
-									<input
-										type='text'
+									<select
 										value={newFeeData.subjectId}
 										onChange={(e) =>
 											setNewFeeData({
@@ -312,16 +391,20 @@ const Fees = () => {
 											})
 										}
 										className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500'
-										placeholder='Subject ID'
-										required
-									/>
+										required>
+										<option value=''>Select Subject</option>
+										{subjects.map((subject) => (
+											<option key={subject._id} value={subject._id}>
+												{subject.subjectName}
+											</option>
+										))}
+									</select>
 								</div>
 								<div>
 									<label className='block text-sm font-medium text-gray-700 mb-1'>
 										Teacher
 									</label>
-									<input
-										type='text'
+									<select
 										value={newFeeData.teacherId}
 										onChange={(e) =>
 											setNewFeeData({
@@ -330,9 +413,35 @@ const Fees = () => {
 											})
 										}
 										className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500'
-										placeholder='Teacher ID'
-										required
-									/>
+										required>
+										<option value=''>Select Teacher</option>
+										{teachers.map((teacher) => (
+											<option key={teacher._id} value={teacher._id}>
+												{teacher.name}
+											</option>
+										))}
+									</select>
+								</div>
+								<div>
+									<label className='block text-sm font-medium text-gray-700 mb-1'>
+										Grade-Subject (Optional)
+									</label>
+									<select
+										value={newFeeData.gradeSubjectId}
+										onChange={(e) =>
+											setNewFeeData({
+												...newFeeData,
+												gradeSubjectId: e.target.value,
+											})
+										}
+										className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500'>
+										<option value=''>Select Grade-Subject</option>
+										{gradeSubjects.map((gs) => (
+											<option key={gs._id} value={gs._id}>
+												{gs.name} (Grade {gs.grade})
+											</option>
+										))}
+									</select>
 								</div>
 								<div>
 									<label className='block text-sm font-medium text-gray-700 mb-1'>
@@ -531,6 +640,14 @@ const Fees = () => {
 																	<span className='font-medium'>Teacher:</span>{' '}
 																	{fee.teacherId?.name || fee.teacherId}
 																</p>
+																<p className='text-gray-500'>
+																	<span className='font-medium'>
+																		Grade-Subject:
+																	</span>{' '}
+																	{fee.gradeSubjectId?.name ||
+																		fee.gradeSubjectId ||
+																		'N/A'}
+																</p>
 															</div>
 															<div>
 																<h4 className='font-medium text-gray-900'>
@@ -636,22 +753,26 @@ const Fees = () => {
 											<label className='block text-sm font-medium text-gray-700 mb-1'>
 												Grade
 											</label>
-											<input
-												type='text'
+											<select
 												value={editData.gradeId}
 												onChange={(e) =>
 													setEditData({ ...editData, gradeId: e.target.value })
 												}
 												className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500'
-												required
-											/>
+												required>
+												<option value=''>Select Grade</option>
+												{grades.map((grade) => (
+													<option key={grade._id} value={grade._id}>
+														{grade.gradeName || `Grade ${grade.grade}`}
+													</option>
+												))}
+											</select>
 										</div>
 										<div>
 											<label className='block text-sm font-medium text-gray-700 mb-1'>
 												Subject
 											</label>
-											<input
-												type='text'
+											<select
 												value={editData.subjectId}
 												onChange={(e) =>
 													setEditData({
@@ -660,15 +781,20 @@ const Fees = () => {
 													})
 												}
 												className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500'
-												required
-											/>
+												required>
+												<option value=''>Select Subject</option>
+												{subjects.map((subject) => (
+													<option key={subject._id} value={subject._id}>
+														{subject.subjectName}
+													</option>
+												))}
+											</select>
 										</div>
 										<div>
 											<label className='block text-sm font-medium text-gray-700 mb-1'>
 												Teacher
 											</label>
-											<input
-												type='text'
+											<select
 												value={editData.teacherId}
 												onChange={(e) =>
 													setEditData({
@@ -677,8 +803,35 @@ const Fees = () => {
 													})
 												}
 												className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500'
-												required
-											/>
+												required>
+												<option value=''>Select Teacher</option>
+												{teachers.map((teacher) => (
+													<option key={teacher._id} value={teacher._id}>
+														{teacher.name}
+													</option>
+												))}
+											</select>
+										</div>
+										<div>
+											<label className='block text-sm font-medium text-gray-700 mb-1'>
+												Grade-Subject (Optional)
+											</label>
+											<select
+												value={editData.gradeSubjectId}
+												onChange={(e) =>
+													setEditData({
+														...editData,
+														gradeSubjectId: e.target.value,
+													})
+												}
+												className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500'>
+												<option value=''>Select Grade-Subject</option>
+												{gradeSubjects.map((gs) => (
+													<option key={gs._id} value={gs._id}>
+														{gs.name} (Grade {gs.grade})
+													</option>
+												))}
+											</select>
 										</div>
 										<div>
 											<label className='block text-sm font-medium text-gray-700 mb-1'>

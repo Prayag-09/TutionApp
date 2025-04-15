@@ -16,8 +16,6 @@ import PrincipalStudents from './pages/principal/Students';
 import PrincipalParents from './pages/principal/Parents';
 import PrincipalSubjects from './pages/principal/Subjects';
 import PrincipalGradeSubjects from './pages/principal/GradeSubjects';
-import PrincipalAssignments from './pages/principal/Assignments';
-import PrincipalQuizzes from './pages/principal/Quiz';
 import PrincipalFees from './pages/principal/Fees';
 import PrincipalReports from './pages/principal/Report';
 
@@ -39,6 +37,7 @@ import ParentChildren from './pages/parent/Children';
 import ParentFeePayment from './pages/parent/FeePayment';
 import Grades from './pages/principal/Grades';
 import HomePage from './pages/HomePage';
+
 function ProtectedLayout({ children }) {
 	const [role, setRole] = useState(localStorage.getItem('role'));
 	const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -167,22 +166,6 @@ function App() {
 				}
 			/>
 			<Route
-				path='/principal/assignments'
-				element={
-					<ProtectedLayout>
-						<PrincipalAssignments />
-					</ProtectedLayout>
-				}
-			/>
-			<Route
-				path='/principal/quizzes'
-				element={
-					<ProtectedLayout>
-						<PrincipalQuizzes />
-					</ProtectedLayout>
-				}
-			/>
-			<Route
 				path='/principal/fees'
 				element={
 					<ProtectedLayout>
@@ -232,22 +215,14 @@ function App() {
 					</ProtectedLayout>
 				}
 			/>
-			<Route
+			{/* <Route
 				path='/teacher/attendance'
 				element={
 					<ProtectedLayout>
 						<div>Attendance Page (To be implemented)</div>
 					</ProtectedLayout>
 				}
-			/>
-			<Route
-				path='/teacher/reports'
-				element={
-					<ProtectedLayout>
-						<div>Reports Page (To be implemented)</div>
-					</ProtectedLayout>
-				}
-			/>
+			/> */}
 
 			{/* Student protected routes */}
 			<Route
@@ -282,14 +257,14 @@ function App() {
 					</ProtectedLayout>
 				}
 			/>
-			<Route
+			{/* <Route
 				path='/student/attendance'
 				element={
 					<ProtectedLayout>
 						<div>Attendance Page (To be implemented)</div>
 					</ProtectedLayout>
 				}
-			/>
+			/> */}
 
 			{/* Parent protected routes */}
 			<Route
