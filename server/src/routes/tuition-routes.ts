@@ -231,7 +231,7 @@ router.delete(
 router.post(
 	'/grade-subject',
 	authenticate,
-	authorize(['principal']),
+	authorize(['principal', 'teacher']),
 	asyncHandler(async (req: Request, res: Response) => {
 		const response = await addGradeSubjectController(req.body);
 		res.status(response.success ? 201 : 500).json(response);
@@ -378,7 +378,7 @@ router.put(
 router.post(
 	'/assignments/add',
 	authenticate,
-	authorize(['principal', 'teacher']),
+	authorize(['teacher']),
 	upload.single('detailsFile'),
 	asyncHandler(async (req: Request, res: Response) => {
 		const assignmentData = {
@@ -413,7 +413,7 @@ router.get(
 router.put(
 	'/assignments/:id',
 	authenticate,
-	authorize(['principal', 'teacher']),
+	authorize(['teacher']),
 	upload.single('detailsFile'),
 	asyncHandler(async (req: Request, res: Response) => {
 		const assignmentData = {

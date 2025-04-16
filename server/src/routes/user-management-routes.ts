@@ -114,7 +114,7 @@ router.get(
 router.get(
 	'/teachers',
 	authenticate,
-	authorize(['principal']),
+	authorize(['principal', 'teacher']),
 	asyncHandler(async (_req: Request, res: Response) => {
 		const teachers = await getAllTeachers();
 		res.status(200).json({ success: true, data: teachers });
